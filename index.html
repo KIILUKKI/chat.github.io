@@ -106,15 +106,41 @@ body {
   padding:12px;
   background:#383a40;
   border-top:1px solid #1f2023;
+  display:flex;
+  gap:8px;
 }
 
 #inputBar input {
-  width:100%;
+  flex:1;
   padding:12px;
   border-radius:8px;
   border:none;
   background:#1e1f22;
   color:#dbdee1;
+}
+
+#emojiBtn {
+  background:none;
+  border:none;
+  font-size:20px;
+  cursor:pointer;
+}
+
+/* EMOJI PANEL */
+#emojiPanel {
+  position:absolute;
+  bottom:70px;
+  left:260px;
+  background:#2b2d31;
+  padding:10px;
+  border-radius:8px;
+  display:none;
+  grid-template-columns:repeat(8,1fr);
+  gap:6px;
+}
+.emoji {
+  cursor:pointer;
+  font-size:20px;
 }
 
 /* USERS */
@@ -125,11 +151,6 @@ body {
   transition:.25s;
 }
 #users.hidden { width:0; padding:0; overflow:hidden; }
-
-#toggleUsers {
-  cursor:pointer;
-  font-size:14px;
-}
 
 /* HOME */
 #home {
@@ -178,7 +199,9 @@ body {
 
 <!-- HOME -->
 <div id="home">
-  <div id="homeLeft"><div id="roomList"></div></div>
+  <div id="homeLeft">
+    <div id="roomList"></div>
+  </div>
   <div id="homeCenter">
     <input id="nick" placeholder="Username">
     <button id="createRoom">Create / Join Room</button>
@@ -202,6 +225,7 @@ body {
   <div id="typing"></div>
 
   <div id="inputBar">
+    <button id="emojiBtn">😊</button>
     <input id="msg" placeholder="Message...">
   </div>
 </div>
@@ -211,6 +235,8 @@ body {
   <b>Online</b>
   <div id="userList"></div>
 </div>
+
+<div id="emojiPanel"></div>
 
 </div>
 
@@ -251,6 +277,7 @@ loadRooms();
 async function join(r){
   const pass=prompt("Password");
   if(pass===null) return;
+
   nick=document.getElementById("nick").value||"Anon";
   localStorage.setItem("nick",nick);
 
@@ -263,13 +290,31 @@ async function join(r){
   room=r;
   roomName.textContent="# "+r;
 
+  const userRef=doc(db,"rooms",room,"users",nick);
+  await setDoc(userRef,{online:true});
+  window.addEventListener("beforeunload",()=>deleteDoc(userRef));
+
+  onSnapshot(collection(db,"rooms",room,"users"),s=>{
+    userList.innerHTML="";
+    s.forEach(u=>{
+      const d=document.createElement("div");
+      d.textContent="🟢 "+u.id;
+      userList.appendChild(d);
+    });
+  });
+
   const q=query(collection(db,"rooms",r,"messages"),orderBy("time"));
   unsub=onSnapshot(q,s=>{
     chat.innerHTML="";
     s.forEach(d=>{
       const m=d.data();
       const t=m.time?.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t}</span><div>${m.text}</div></div>`;
+      chat.innerHTML+=`
+        <div class="message">
+          <b>${m.name}</b>
+          <span class="time">${t||""}</span>
+          <div>${m.text}</div>
+        </div>`;
     });
     chat.scrollTop=chat.scrollHeight;
   });
@@ -277,7 +322,7 @@ async function join(r){
 
 /* SEND */
 msg.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
+  if(e.key==="Enter" && msg.value){
     addDoc(collection(db,"rooms",room,"messages"),{
       name:nick,text:msg.value,time:serverTimestamp()
     });
@@ -304,6 +349,24 @@ createRoom.onclick=()=>{
   const r=prompt("Room name");
   if(r) join(r);
 };
+
+/* EMOJIS */
+const emojis="😀😃😄😁😆😅😂🤣😊😍😘😎😭😡🔥💀👍👎❤️💔🎉".split("");
+emojiBtn.onclick=()=>{
+  emojiPanel.style.display =
+    emojiPanel.style.display==="none" ? "grid" : "none";
+};
+emojis.forEach(e=>{
+  const s=document.createElement("span");
+  s.textContent=e;
+  s.className="emoji";
+  s.onclick=()=>{
+    msg.value+=e;
+    emojiPanel.style.display="none";
+    msg.focus();
+  };
+  emojiPanel.appendChild(s);
+});
 </script>
 </body>
 </html>
