@@ -5,7 +5,6 @@
 <title>MiniChat – Discord Style</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* sama CSS kuin aiemmin, ei muutosta */
 *{box-sizing:border-box;}
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color:#dbdee1;display:flex;}
 #app{display:flex;width:100%;height:100%;}
@@ -24,7 +23,6 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color
 #typing{height:18px;font-size:12px;color:#949ba4;padding-left:16px;}
 #inputBar{padding:12px;background:#383a40;border-top:1px solid #1f2023;display:flex;gap:6px;}
 #inputBar input{flex:1;padding:12px;border-radius:8px;border:none;background:#1e1f22;color:#dbdee1;}
-#inputBar input[type=file]{flex:none;}
 #users{width:220px;background:#2b2d31;padding:12px;transition:.25s;}
 #users.hidden{width:0;padding:0;overflow:hidden;}
 #home{position:absolute;inset:0;background:#1e1f22;display:flex;}
@@ -59,7 +57,6 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color
   <div id="typing"></div>
   <div id="inputBar">
     <input id="msg" placeholder="Message...">
-    <input type="file" id="fileInput">
   </div>
 </div>
 
@@ -72,24 +69,19 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// ← Muutettu storageBucket valmiiksi oikein
 const app = initializeApp({
   apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
-  projectId:"chat-fc8ef",
-  storageBucket: "chat-fc8ef.appspot.com"
+  projectId:"chat-fc8ef"
 });
 
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 let room="", nick="", unsub;
 
 const chat=document.getElementById("chat");
 const typingEl=document.getElementById("typing");
 const msg=document.getElementById("msg");
-const fileInput=document.getElementById("fileInput");
 
 // Persistointi
 document.getElementById("nick").value = localStorage.getItem("nick") || "";
@@ -149,55 +141,34 @@ async function join(r){
   // Messages
   const q=query(collection(db,"rooms",r,"messages"),orderBy("time"));
   unsub=onSnapshot(q,s=>{
+    s.forEach(d=>{
+      const m=d.data();
+      if(m.name!==nick){
+        typingEl.textContent = "📢 New message!";
+        setTimeout(()=>typingEl.textContent="",500);
+      }
+    });
+
     chat.innerHTML="";
     s.forEach(d=>{
       const m=d.data();
       const t=m.time?.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      if(m.type==="file")
-        chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t||""}</span><div><a href="${m.text}" target="_blank">📎 File</a></div></div>`;
-      else
-        chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t||""}</span><div>${m.text}</div></div>`;
-      // Notification
-      if(Notification.permission==="granted" && m.name!==nick) new Notification(`${m.name}: ${m.text}`);
+      chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t||""}</span><div>${m.text}</div></div>`;
     });
     chat.scrollTop = chat.scrollHeight;
   });
 }
 
-/* SEND MESSAGE & COMMANDS */
-msg.addEventListener("keydown", async e=>{
+/* SEND MESSAGE */
+msg.addEventListener("keydown", e=>{
   if(e.key==="Enter" && msg.value){
-    const text=msg.value.trim();
-    if(text.startsWith("/clear")){
-      const msgs = await getDocs(collection(db,"rooms",room,"messages"));
-      msgs.forEach(async m=>await deleteDoc(doc(db,"rooms",room,"messages",m.id)));
-      msg.value=""; return;
-    }
-    if(text.startsWith("/deleteroom")){
-      const msgs = await getDocs(collection(db,"rooms",room,"messages"));
-      msgs.forEach(async m=>await deleteDoc(doc(db,"rooms",room,"messages",m.id)));
-      await deleteDoc(doc(db,"rooms",room));
-      home.style.display="flex";
-      unsub();
-      msg.value=""; return;
-    }
+    const text = msg.value.trim();
     addDoc(collection(db,"rooms",room,"messages"),{name:nick,text:text,time:serverTimestamp()});
     msg.value="";
   } else {
     setDoc(doc(db,"rooms",room,"typing",nick),{typing:msg.value.length>0});
     setTimeout(()=>setDoc(doc(db,"rooms",room,"typing",nick),{typing:false}),1200);
   }
-});
-
-/* FILE UPLOAD */
-fileInput.addEventListener("change", async e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const fileRef = ref(storage, `rooms/${room}/${file.name}`);
-  await uploadBytes(fileRef,file);
-  const url = await getDownloadURL(fileRef);
-  addDoc(collection(db,"rooms",room,"messages"),{name:nick,text:url,time:serverTimestamp(),type:"file"});
-  fileInput.value="";
 });
 
 /* UI */
