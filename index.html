@@ -33,6 +33,8 @@ button:hover { background:#3a8ad1; }
 #chatControls input { margin-bottom:5px; }
 #backBtn { background:#e04b4b; }
 #backBtn:hover { background:#c33a3a; }
+.room { padding:8px; margin-bottom:5px; border-radius:5px; background:#2a2b2d; cursor:pointer; transition:0.2s; }
+.room:hover { background:#4b9ce2; color:#000; }
 </style>
 </head>
 <body>
@@ -44,6 +46,7 @@ button:hover { background:#3a8ad1; }
     <input id="nick" placeholder="Choose your nickname">
     <h3>Available Rooms</h3>
     <div id="roomList"></div>
+    <button id="createRoomBtn">Create Room</button>
   </div>
 
   <!-- ROOM CHAT -->
@@ -88,21 +91,16 @@ const nickInput = document.getElementById("nick");
 let nick = localStorage.getItem("nick") || "";
 if(nick) nickInput.value = nick;
 
-// ENTER send
+// ENTER = send
 msgInput.addEventListener("keydown", e=>{ if(e.key==="Enter") send(); });
 
-// Load available rooms
+// Load rooms
 async function loadRooms(){
   roomList.innerHTML="";
   const roomsSnap = await getDocs(collection(db,"rooms"));
   roomsSnap.forEach(r=>{
     const div=document.createElement("div");
     div.className="room";
-    div.style.padding="8px";
-    div.style.marginBottom="5px";
-    div.style.background="#2a2b2d";
-    div.style.cursor="pointer";
-    div.style.borderRadius="5px";
     div.innerText=r.id;
     div.onclick=async ()=>{
       const pass = prompt(`Enter password for room "${r.id}"`);
@@ -114,12 +112,22 @@ async function loadRooms(){
 }
 loadRooms();
 
+// Create new room
+document.getElementById("createRoomBtn").addEventListener("click", async ()=>{
+  const roomName = prompt("Enter new room name");
+  if(!roomName) return;
+  const pass = prompt("Enter password for this room");
+  if(pass===null) return;
+  joinRoom(roomName,pass);
+});
+
 // Join room
 async function joinRoom(roomName,password){
   nick = nickInput.value.trim()||"Anon";
   if(!nick){ alert("Enter nickname"); return; }
   localStorage.setItem("nick",nick);
   currentRoom=roomName;
+
   const roomRef = doc(db,"rooms",roomName);
   const snap = await getDoc(roomRef);
   const now=Date.now();
@@ -135,12 +143,12 @@ async function joinRoom(roomName,password){
   document.getElementById("chatView").classList.remove("hidden");
   document.getElementById("title").innerText=`🔥 Room: ${roomName}`;
 
-  // Load chat
+  // Load chat realtime
   const q = query(collection(db,"rooms",roomName,"messages"),orderBy("time"));
   unsub = onSnapshot(q,snap=>{
     chat.innerHTML="";
     snap.forEach(d=>{
-      const m=d.data();
+      const m = d.data();
       chat.innerHTML+=`<div class="message"><b>${m.name}:</b> ${m.text}</div>`;
     });
     chat.scrollTop=chat.scrollHeight;
