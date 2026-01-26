@@ -1,29 +1,50 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Mini Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body { background:#111; color:#eee; font-family:sans-serif }
-#chat { height:300px; overflow:auto; border:1px solid #444; padding:5px }
-input, button { width:100%; margin-top:5px; padding:6px }
-.hidden { display:none }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #18191a;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+  }
+  h1 { margin-top: 20px; }
+  #login, #chatUI { width: 90%; max-width: 500px; margin-top: 20px; }
+  input, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: none; font-size: 1rem; }
+  input { background: #242526; color: #eee; }
+  button { background: #4b9ce2; color: #fff; font-weight: 600; cursor: pointer; transition: 0.2s; }
+  button:hover { background: #3a8ad1; }
+  #chat { height: 350px; overflow-y: auto; background: #242526; padding: 10px; border-radius: 8px; margin-top: 10px; display: flex; flex-direction: column; }
+  .message { margin-bottom: 8px; word-wrap: break-word; }
+  .message b { color: #4b9ce2; }
+  #msg { margin-top: 10px; }
+  .hidden { display: none; }
+  @media (max-width: 600px) {
+    #chat { height: 300px; }
+  }
 </style>
 </head>
 <body>
 
-<h2 id="title">🔥 Mini Chat</h2>
+<h1 id="title">🔥 Mini Chat</h1>
 
 <div id="login">
-  <input id="room" placeholder="Huoneen nimi">
-  <input id="pass" type="password" placeholder="Salasana">
-  <button onclick="join()">Liity / Luo huone</button>
+  <input id="nick" placeholder="Choose your nickname">
+  <input id="room" placeholder="Room name">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="join()">Join / Create Room</button>
 </div>
 
 <div id="chatUI" class="hidden">
   <div id="chat"></div>
-  <input id="name" placeholder="Nimi">
-  <input id="msg" placeholder="Viesti (Enter = lähetä)">
+  <input id="msg" placeholder="Type a message (Enter = send)">
 </div>
 
 <script type="module">
@@ -34,6 +55,7 @@ import {
   onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
   authDomain: "chat-fc8ef.firebaseapp.com",
@@ -42,7 +64,6 @@ const firebaseConfig = {
   messagingSenderId: "446356718094",
   appId: "1:446356718094:web:f56514352845d6bbb7b25f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -51,39 +72,39 @@ let unsub = null;
 
 const chat = document.getElementById("chat");
 const msgInput = document.getElementById("msg");
+const nickInput = document.getElementById("nick");
 
-// ENTER = lähetä
-msgInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") send();
-});
+// Load nickname from localStorage
+let nick = localStorage.getItem("nick") || "";
+if (nick) nickInput.value = nick;
+
+// ENTER = send
+msgInput.addEventListener("keydown", e => { if(e.key==="Enter") send(); });
+nickInput.addEventListener("keydown", e => { if(e.key==="Enter") join(); });
 
 window.join = async () => {
-  const room = document.getElementById("room").value.trim();
-  const pass = document.getElementById("pass").value;
+  let room = document.getElementById("room").value.trim();
+  let pass = document.getElementById("pass").value;
+  nick = document.getElementById("nick").value.trim() || "Anon";
 
-  if (!room || !pass) {
-    alert("Anna huone ja salasana");
-    return;
-  }
+  if (!room || !pass) { alert("Please enter room name and password"); return; }
+  if (!nick) { alert("Please enter a nickname"); return; }
+
+  localStorage.setItem("nick", nick);
 
   const roomRef = doc(db, "rooms", room);
   const snap = await getDoc(roomRef);
-
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
 
   if (!snap.exists()) {
-    // 🔥 LUO HUONE
+    // Create room
     await setDoc(roomRef, {
       password: pass,
       roomExpiresAt: new Date(now + day)
     });
   } else {
-    if (snap.data().password !== pass) {
-      alert("Väärä salasana");
-      return;
-    }
-    // 🔄 Päivitä huoneen elinikää kun joku liittyy
+    if (snap.data().password !== pass) { alert("Wrong password"); return; }
     await setDoc(roomRef, {
       roomExpiresAt: new Date(now + day)
     }, { merge: true });
@@ -92,58 +113,47 @@ window.join = async () => {
   currentRoom = room;
   document.getElementById("login").classList.add("hidden");
   document.getElementById("chatUI").classList.remove("hidden");
-  document.getElementById("title").innerText = "🔥 Huone: " + room;
+  document.getElementById("title").innerText = `🔥 Room: ${room}`;
 
-  const q = query(
-    collection(db, "rooms", room, "messages"),
-    orderBy("time")
-  );
-
+  const q = query(collection(db, "rooms", room, "messages"), orderBy("time"));
   unsub = onSnapshot(q, snap => {
     chat.innerHTML = "";
     snap.forEach(d => {
       const m = d.data();
-      chat.innerHTML += `<div><b>${m.name}:</b> ${m.text}</div>`;
+      chat.innerHTML += `<div class="message"><b>${m.name}:</b> ${m.text}</div>`;
     });
     chat.scrollTop = chat.scrollHeight;
   });
 };
 
 window.send = async () => {
-  const name = document.getElementById("name").value || "Anon";
   const text = msgInput.value.trim();
   if (!text) return;
 
-  // 🔧 KOMENNOT
+  // Commands
   if (text === "/clear") {
-    if (!confirm("Tyhjennetäänkö huone?")) return;
+    if (!confirm("Clear all messages in this room?")) return;
     const msgs = await getDocs(collection(db, "rooms", currentRoom, "messages"));
     msgs.forEach(d => deleteDoc(d.ref));
     msgInput.value = "";
     return;
   }
-
   if (text === "/delete") {
-    if (!confirm("POISTETAAN KOKO HUONE?")) return;
-
+    if (!confirm("DELETE ENTIRE ROOM?")) return;
     const msgs = await getDocs(collection(db, "rooms", currentRoom, "messages"));
     msgs.forEach(d => deleteDoc(d.ref));
-
     await deleteDoc(doc(db, "rooms", currentRoom));
     location.reload();
     return;
   }
 
-  // 💬 NORMAALI VIESTI
-  await addDoc(
-    collection(db, "rooms", currentRoom, "messages"),
-    {
-      name,
-      text,
-      time: serverTimestamp(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-    }
-  );
+  // Normal message
+  await addDoc(collection(db, "rooms", currentRoom, "messages"), {
+    name: nick,
+    text,
+    time: serverTimestamp(),
+    expiresAt: new Date(Date.now() + 24*60*60*1000)
+  });
 
   msgInput.value = "";
 };
