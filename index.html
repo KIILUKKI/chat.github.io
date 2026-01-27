@@ -28,7 +28,8 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 #roomName { font-weight: 600; }
 #chatWrapper { display: flex; flex: 1; overflow: hidden; }
 #chatSidebar { width: 260px; background: #161b22; border-right: 1px solid #0d1117; padding: 10px; }
-#chat { flex: 1; padding: 16px; overflow-y: auto; position: relative; display:flex; flex-direction:column-reverse; }
+#chatWrapperMain { flex:1; display:flex; flex-direction:column; }
+#chat { flex: 1; padding: 16px; overflow-y: auto; display:flex; flex-direction:column; gap: 10px; }
 
 /* MESSAGE */
 .message { display: flex; gap: 10px; margin-bottom: 14px; }
@@ -86,7 +87,7 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 
   <div id="chatWrapper">
     <div id="chatSidebar"></div>
-    <div id="chatWrapperMain" style="flex:1; display:flex; flex-direction:column;">
+    <div id="chatWrapperMain">
       <div id="chat"></div>
       <div id="typingIndicator"></div>
     </div>
@@ -104,9 +105,7 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-  getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, writeBatch, limit, deleteDoc 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
@@ -114,65 +113,51 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-let room = "", nick = "", nickColor = "#58a6ff", replyTo = null;
+let room="", nick="", nickColor="#58a6ff", replyTo=null;
+const chat=document.getElementById("chat");
+const msg=document.getElementById("msg");
+const roomList=document.getElementById("roomList");
+const replyBox=document.getElementById("replyBox");
+const roomName=document.getElementById("roomName");
+const emojiPicker=document.getElementById("emojiPicker");
+const emojiBtn=document.getElementById("emojiBtn");
+const typingIndicator=document.getElementById("typingIndicator");
 
-const chat = document.getElementById("chat");
-const msg = document.getElementById("msg");
-const roomList = document.getElementById("roomList");
-const replyBox = document.getElementById("replyBox");
-const roomName = document.getElementById("roomName");
-const emojiPicker = document.getElementById("emojiPicker");
-const emojiBtn = document.getElementById("emojiBtn");
-const typingIndicator = document.getElementById("typingIndicator");
-
-// Load stored nick and color
-document.getElementById("nick").value = localStorage.getItem("nick") || "";
-document.getElementById("nickColor").value = localStorage.getItem("nickColor") || "#58a6ff";
-document.getElementById("nickColor").oninput = () => localStorage.setItem("nickColor", document.getElementById("nickColor").value);
+// Load stored nick/color
+document.getElementById("nick").value=localStorage.getItem("nick")||"";
+document.getElementById("nickColor").value=localStorage.getItem("nickColor")||"#58a6ff";
+document.getElementById("nickColor").oninput=()=>localStorage.setItem("nickColor", document.getElementById("nickColor").value);
 
 // Load rooms
-async function loadRooms() {
-  roomList.innerHTML = "";
-  const s = await getDocs(collection(db, "rooms"));
-  s.forEach(r => {
-    const d = document.createElement("div");
-    d.className = "room";
-    d.textContent = "# "+r.id; // HUOM: ei poistoa lobbyssä
-    d.onclick = ()=>joinRoom(r.id);
+async function loadRooms(){
+  roomList.innerHTML="";
+  const s=await getDocs(collection(db,"rooms"));
+  s.forEach(r=>{
+    const d=document.createElement("div");
+    d.className="room"; d.textContent="# "+r.id;
+    d.onclick=()=>joinRoom(r.id);
     roomList.appendChild(d);
   });
 }
 
-// Create or join room
-document.getElementById("createRoom").onclick = async () => {
-  const r = prompt("Room name"); if(!r) return;
-  const pass = prompt("Password (optional)"); 
-  const roomRef = doc(db, "rooms", r);
-  if(!(await getDoc(roomRef)).exists()){
-    await setDoc(roomRef, {password: pass||"", created: serverTimestamp()});
-  }
-  joinRoom(r, pass||"");
+// Create/join room
+document.getElementById("createRoom").onclick=async ()=>{
+  const r=prompt("Room name"); if(!r)return;
+  const roomRef=doc(db,"rooms",r);
+  if(!(await getDoc(roomRef)).exists()) await setDoc(roomRef,{created:serverTimestamp()});
+  joinRoom(r);
 };
 
 // Join room
-async function joinRoom(r, providedPass=null){
-  nick = document.getElementById("nick").value || ("Anon"+Math.floor(Math.random()*1000));
-  nickColor = document.getElementById("nickColor").value;
-  localStorage.setItem("nick", nick);
-  localStorage.setItem("nickColor", nickColor);
-
-  const roomRef = doc(db,"rooms",r);
-  const snap = await getDoc(roomRef);
-  if(!snap.exists()) return alert("Room does not exist");
-  const roomPass = snap.data().password || "";
-  if(providedPass===null && roomPass!=="") providedPass=prompt("Password required:");
-  if(roomPass!==providedPass) return alert("Wrong password");
+async function joinRoom(r){
+  nick=document.getElementById("nick").value||("Anon"+Math.floor(Math.random()*1000));
+  nickColor=document.getElementById("nickColor").value;
+  localStorage.setItem("nick",nick);
+  localStorage.setItem("nickColor",nickColor);
 
   document.getElementById("home").style.display="none";
   document.getElementById("main").style.display="flex";
   room=r; roomName.textContent="# "+r;
-
-  const typingRef = collection(db,"rooms",room,"typing");
 
   // Listen messages
   onSnapshot(query(collection(db,"rooms",room,"messages"),orderBy("time")), snapshot=>{
@@ -180,8 +165,9 @@ async function joinRoom(r, providedPass=null){
     snapshot.forEach(d=>{
       const m=d.data();
       const t=m.time?.toDate();
-      chat.innerHTML+=`
-      <div class="message">
+      const msgDiv=document.createElement("div");
+      msgDiv.className="message";
+      msgDiv.innerHTML=`
         <div class="avatar" style="background:${m.color}">${m.name[0]}</div>
         <div class="msg">
           ${m.reply?`<div class="reply-preview"><b>${m.reply.name}</b>: ${m.reply.text}</div>`:""}
@@ -189,22 +175,22 @@ async function joinRoom(r, providedPass=null){
           <span class="time">${t?t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):""}</span>
           <div>${m.text}</div>
           ${!m.reply?`<div class="reply-btn" data-name="${m.name}" data-text="${m.text}">reply</div>`:""}
-        </div>
-      </div>`;
+        </div>`;
+      chat.appendChild(msgDiv);
     });
     chat.scrollTop=chat.scrollHeight;
   });
 
   // Typing indicator
-  onSnapshot(typingRef,snapshot=>{
+  const typingRef=collection(db,"rooms",room,"typing");
+  onSnapshot(typingRef,snap=>{
     const names=[];
-    snapshot.forEach(doc=>{ if(doc.id!==nick && doc.data().typing) names.push(doc.id); });
+    snap.forEach(d=>{ if(d.id!==nick && d.data().typing) names.push(d.id); });
     typingIndicator.textContent=names.length===0?"":names.length===1?`${names[0]} is typing...`:`${names.join(", ")} are typing...`;
   });
 
-  // Update typing
   let typingTimeout;
-  msg.addEventListener("input", ()=>{
+  msg.addEventListener("input",()=>{
     setDoc(doc(typingRef,nick),{typing:true});
     clearTimeout(typingTimeout);
     typingTimeout=setTimeout(()=>setDoc(doc(typingRef,nick),{typing:false}),1500);
@@ -212,9 +198,9 @@ async function joinRoom(r, providedPass=null){
 }
 
 // Reply
-chat.addEventListener("click", e=>{
+chat.addEventListener("click",e=>{
   const b=e.target.closest(".reply-btn");
-  if(!b) return;
+  if(!b)return;
   replyTo={name:b.dataset.name,text:b.dataset.text};
   replyBox.style.display="block";
   replyBox.innerHTML=`Replying to <span>${replyTo.name}</span><button onclick="cancelReply()">x</button>`;
@@ -222,30 +208,21 @@ chat.addEventListener("click", e=>{
 window.cancelReply=()=>{replyTo=null; replyBox.style.display="none"}
 
 // Send message
-msg.addEventListener("keydown", async e=>{
+msg.addEventListener("keydown",async e=>{
   if(e.key!=="Enter") return;
   const text=msg.value.trim(); msg.value=""; if(!text) return;
 
   if(text==="/clear"){
-    const s=await getDocs(collection(db,"rooms",room,"messages"));
-    const b=writeBatch(db); s.forEach(d=>b.delete(d.ref)); await b.commit(); return;
-  }
-  if(text==="/deletelast"){
-    const s=await getDocs(query(collection(db,"rooms",room,"messages"),orderBy("time","desc"),limit(1)));
-    const b=writeBatch(db); s.forEach(d=>{ if(d.data().name===nick)b.delete(d.ref); }); await b.commit(); return;
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
+    for(const d of msgs.docs) await deleteDoc(d.ref); return;
   }
   if(text==="/delete"){
-    if(!confirm("Delete entire room and messages?")) return;
+    if(!confirm("Delete entire room and all messages?")) return;
     try{
-      const roomRef=doc(db,"rooms",room);
-      const msgsRef=collection(db,"rooms",room,"messages");
-      const b=writeBatch(db);
-      const msgs=await getDocs(msgsRef);
-      msgs.forEach(d=>b.delete(d.ref));
-      b.delete(roomRef);
-      await b.commit();
-      alert("Room deleted");
-      location.reload();
+      const msgs=await getDocs(collection(db,"rooms",room,"messages"));
+      for(const d of msgs.docs) await deleteDoc(d.ref);
+      await deleteDoc(doc(db,"rooms",room));
+      alert("Room deleted"); location.reload();
     }catch(err){console.error(err); alert("Failed to delete room");}
     return;
   }
@@ -254,7 +231,7 @@ msg.addEventListener("keydown", async e=>{
   replyTo=null; replyBox.style.display="none";
 });
 
-// Back button
+// Back
 document.getElementById("back").onclick=()=>location.reload();
 
 // Notifications
