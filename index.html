@@ -2,190 +2,198 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MiniChat – Discord Style</title>
+<title>MiniChat</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;}
-body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color:#dbdee1;display:flex;}
-#app{display:flex;width:100%;height:100%;}
-#sidebar{width:240px;background:#2b2d31;padding:12px;display:flex;flex-direction:column;}
-.room{padding:10px;border-radius:6px;margin-bottom:4px;cursor:pointer;}
-.room:hover{background:#404249;}
-#main{flex:1;display:flex;flex-direction:column;}
-#header{height:48px;background:#313338;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #1f2023;}
-#headerLeft{display:flex;align-items:center;gap:10px;}
-#header button{background:none;border:none;color:#dbdee1;cursor:pointer;font-size:14px;}
-#header button:hover{color:#fff;}
-#chat{flex:1;padding:16px;overflow-y:auto;}
-.message{margin-bottom:14px;}
-.message b{color:#fff;}
-.time{font-size:11px;color:#949ba4;margin-left:6px;}
-#typing{height:18px;font-size:12px;color:#949ba4;padding-left:16px;}
-#inputBar{padding:12px;background:#383a40;border-top:1px solid #1f2023;display:flex;gap:6px;}
-#inputBar input{flex:1;padding:12px;border-radius:8px;border:none;background:#1e1f22;color:#dbdee1;}
-#users{width:220px;background:#2b2d31;padding:12px;transition:.25s;}
-#users.hidden{width:0;padding:0;overflow:hidden;}
-#home{position:absolute;inset:0;background:#1e1f22;display:flex;}
-#homeLeft{width:240px;background:#2b2d31;padding:12px;}
-#homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;}
-#homeCenter input,#homeCenter button{width:300px;padding:14px;margin-bottom:12px;border-radius:8px;border:none;}
-#homeCenter input{background:#2b2d31;color:#fff;}
-#homeCenter button{background:#5865f2;color:#fff;font-weight:600;cursor:pointer;}
+*{box-sizing:border-box}
+body{
+  margin:0;height:100vh;font-family:Inter,sans-serif;
+  background:#1e1f22;color:#dbdee1;display:flex
+}
+.hidden{display:none}
+#home,#main{flex:1;padding:20px}
+#chat{height:calc(100vh - 160px);overflow-y:auto;padding:10px}
+.message{margin-bottom:12px}
+.message b{color:#fff}
+.time{font-size:11px;color:#949ba4;margin-left:6px}
+#typing{height:18px;font-size:12px;color:#949ba4}
+#msg{width:100%;padding:12px;border-radius:8px;border:none;background:#2b2d31;color:#fff}
+#users{
+  width:200px;background:#2b2d31;padding:12px;border-left:1px solid #1f2023
+}
 </style>
 </head>
-<body>
-<div id="app">
 
-<!-- HOME -->
+<body>
+
 <div id="home">
-  <div id="homeLeft"><div id="roomList"></div></div>
-  <div id="homeCenter">
-    <input id="nick" placeholder="Username">
-    <button id="createRoom">Create / Join Room</button>
-  </div>
+  <h2>Join chat</h2>
+  <input id="nick" placeholder="Username">
+  <button id="join">Join room</button>
 </div>
 
-<!-- SIDEBAR -->
-<div id="sidebar"></div>
-
-<!-- MAIN -->
-<div id="main">
-  <div id="header">
-    <div id="headerLeft">
-      <button id="back">← Return</button>
-      <span id="roomName">Select room</span>
-    </div>
-    <span id="toggleUsers">👥</span>
-  </div>
-
+<div id="main" class="hidden">
+  <button id="back">← Leave</button>
+  <h3 id="roomName"></h3>
   <div id="chat"></div>
   <div id="typing"></div>
-
-  <div id="inputBar">
-    <input id="msg" placeholder="Message...">
-  </div>
+  <input id="msg" placeholder="Message or /command">
 </div>
 
-<!-- USERS -->
-<div id="users" class="hidden">
+<div id="users">
   <b>Online</b>
   <div id="userList"></div>
 </div>
 
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, addDoc,
+  getDocs, query, orderBy, onSnapshot, serverTimestamp,
+  deleteDoc, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
   projectId:"chat-fc8ef"
 });
-
 const db = getFirestore(app);
 
-let room="", nick="", unsub;
+/* STATE */
+let room="", nick="", heartbeat;
+const chat = document.getElementById("chat");
+const typingEl = document.getElementById("typing");
+const msg = document.getElementById("msg");
 
-const chat=document.getElementById("chat");
-const typingEl=document.getElementById("typing");
-const msg=document.getElementById("msg");
+/* PERSIST NICK */
+nick.value = localStorage.getItem("nick") || "";
 
-// Persistointi
-document.getElementById("nick").value = localStorage.getItem("nick") || "";
+/* JOIN */
+join.onclick = async ()=>{
+  room = prompt("Room name");
+  if(!room) return;
 
-/* LOAD ROOMS */
-async function loadRooms(){
-  roomList.innerHTML="";
-  const s = await getDocs(collection(db,"rooms"));
-  s.forEach(r=>{
-    const d=document.createElement("div");
-    d.className="room";
-    d.textContent="# "+r.id;
-    d.onclick=()=>join(r.id);
-    roomList.appendChild(d);
-  });
-}
-loadRooms();
-
-/* JOIN ROOM */
-async function join(r){
-  const pass=prompt("Password");
-  if(pass===null) return;
-  nick=document.getElementById("nick").value||("Anon"+Math.floor(Math.random()*1000));
+  nick = document.getElementById("nick").value.trim();
+  if(!nick) return alert("Nick required");
   localStorage.setItem("nick",nick);
 
-  const ref=doc(db,"rooms",r);
-  const snap=await getDoc(ref);
-  if(!snap.exists()) await setDoc(ref,{password:pass});
-  else if(snap.data().password!==pass) return alert("Wrong");
+  const userRef = doc(db,"rooms",room,"users",nick);
+  const snap = await getDoc(userRef);
 
-  document.getElementById("home").style.display="none";
-  room=r;
-  roomName.textContent="# "+r;
+  if(snap.exists()){
+    const last = snap.data().lastActive?.toMillis() || 0;
+    if(Date.now() - last < 180000){
+      return alert("Nick already online");
+    }
+  }
 
-  const userRef=doc(db,"rooms",room,"users",nick);
-  await setDoc(userRef,{online:true});
+  await setDoc(userRef,{ lastActive: serverTimestamp() });
+
+  heartbeat = setInterval(()=>{
+    setDoc(userRef,{ lastActive: serverTimestamp() },{merge:true});
+  },30000);
+
   window.addEventListener("beforeunload",()=>deleteDoc(userRef));
 
-  // Online-lista
-  onSnapshot(collection(db,"rooms",room,"users"),s=>{
+  home.classList.add("hidden");
+  main.classList.remove("hidden");
+  roomName.textContent="# "+room;
+
+  /* ONLINE LIST (3 min timeout) */
+  onSnapshot(collection(db,"rooms",room,"users"),snap=>{
     userList.innerHTML="";
-    s.forEach(u=>{
-      const d=document.createElement("div");
-      d.textContent="🟢 "+u.id;
-      userList.appendChild(d);
+    snap.forEach(d=>{
+      const last=d.data().lastActive?.toMillis()||0;
+      if(Date.now()-last < 180000){
+        userList.innerHTML+=`<div>🟢 ${d.id}</div>`;
+      }
     });
   });
 
-  // Typing-per-user
-  const typingRef = collection(db,"rooms",room,"typing");
-  onSnapshot(typingRef,s=>{
+  /* TYPING */
+  onSnapshot(collection(db,"rooms",room,"typing"),snap=>{
     const arr=[];
-    s.forEach(doc=>{
-      if(doc.id!==nick && doc.data().typing) arr.push(doc.id);
+    snap.forEach(d=>{
+      if(d.id!==nick && d.data().typing) arr.push(d.id);
     });
-    typingEl.textContent=arr.length>0 ? arr.join(", ")+" is typing..." : "";
+    typingEl.textContent = arr.length ? arr.join(", ")+" is typing..." : "";
   });
 
-  // Messages
-  const q=query(collection(db,"rooms",r,"messages"),orderBy("time"));
-  unsub=onSnapshot(q,s=>{
+  /* MESSAGES */
+  const q=query(collection(db,"rooms",room,"messages"),orderBy("time"));
+  onSnapshot(q,s=>{
     chat.innerHTML="";
     s.forEach(d=>{
       const m=d.data();
-      const t=m.time?.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t||""}</span><div>${m.text}</div></div>`;
+      const t=m.time?.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      chat.innerHTML+=`
+        <div class="message">
+          <b>${m.name}</b>
+          <span class="time">${t||""}</span>
+          <div>${m.text}</div>
+        </div>`;
 
-      // Chrome notification vain jos joku muu kirjoittaa
       if(m.name!==nick && Notification.permission==="granted"){
-        const n = new Notification(`${m.name} sent a message`, { body:m.text });
+        const n=new Notification(`${m.name}`,{body:m.text});
         setTimeout(()=>n.close(),500);
       }
     });
-    chat.scrollTop = chat.scrollHeight;
+    chat.scrollTop=chat.scrollHeight;
   });
-}
+};
 
-/* SEND MESSAGE */
-msg.addEventListener("keydown", e=>{
-  if(e.key==="Enter" && msg.value){
-    const text = msg.value.trim();
-    addDoc(collection(db,"rooms",room,"messages"),{name:nick,text:text,time:serverTimestamp()});
-    msg.value="";
-  } else {
-    setDoc(doc(db,"rooms",room,"typing",nick),{typing:msg.value.length>0});
-    setTimeout(()=>setDoc(doc(db,"rooms",room,"typing",nick),{typing:false}),1200);
+/* SEND + COMMANDS (KAIKILLE OIKEUDET) */
+msg.addEventListener("keydown",async e=>{
+  if(e.key!=="Enter" || !msg.value) return;
+  const text=msg.value.trim();
+  msg.value="";
+
+  // /clear
+  if(text==="/clear"){
+    const snap=await getDocs(collection(db,"rooms",room,"messages"));
+    const batch=writeBatch(db);
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    return;
   }
+
+  // /deleteroom
+  if(text==="/deleteroom"){
+    const batch=writeBatch(db);
+    for(const c of ["messages","users","typing"]){
+      const s=await getDocs(collection(db,"rooms",room,c));
+      s.forEach(d=>batch.delete(d.ref));
+    }
+    batch.delete(doc(db,"rooms",room));
+    await batch.commit();
+    location.reload();
+    return;
+  }
+
+  // normal message
+  await addDoc(collection(db,"rooms",room,"messages"),{
+    name:nick,text,time:serverTimestamp()
+  });
 });
 
-/* UI */
-back.onclick=()=>{ if(unsub) unsub(); home.style.display="flex"; };
-toggleUsers.onclick=()=>users.classList.toggle("hidden");
-createRoom.onclick=()=>{ const r=prompt("Room name"); if(r) join(r); };
+/* TYPING FLAG */
+msg.addEventListener("input",()=>{
+  setDoc(doc(db,"rooms",room,"typing",nick),{typing:true});
+  setTimeout(()=>setDoc(doc(db,"rooms",room,"typing",nick),{typing:false}),1200);
+});
 
-// Pyydetään ilmoitusoikeus
-if(Notification.permission!=="granted") Notification.requestPermission();
+/* LEAVE */
+back.onclick=()=>{
+  clearInterval(heartbeat);
+  deleteDoc(doc(db,"rooms",room,"users",nick));
+  location.reload();
+};
+
+/* NOTIFICATIONS */
+if(Notification.permission!=="granted"){
+  Notification.requestPermission();
+}
 </script>
 </body>
 </html>
