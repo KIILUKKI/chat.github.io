@@ -128,25 +128,19 @@ loadRooms();
 // Create room
 document.getElementById("createRoom").onclick = async () => {
   const r = prompt("Room name"); if (!r) return;
-  const p = prompt("Password (optional)") || "";
   const roomRef = doc(db, "rooms", r);
-  if ((await getDoc(roomRef)).exists()) return alert("Room exists");
-  await setDoc(roomRef, { password: p });
-  loadRooms();
+  if (!(await getDoc(roomRef)).exists()) {
+    await setDoc(roomRef, { created: serverTimestamp() });
+  }
+  joinRoom(r);
 };
 
 // Join room
 async function joinRoom(r) {
-  const pass = prompt("Password"); if (pass === null) return;
   nick = document.getElementById("nick").value || ("Anon" + Math.floor(Math.random() * 1000));
   nickColor = document.getElementById("nickColor").value;
   localStorage.setItem("nick", nick);
   localStorage.setItem("nickColor", nickColor);
-
-  const roomRef = doc(db, "rooms", r);
-  const snap = await getDoc(roomRef);
-  if (!snap.exists()) return;
-  if (snap.data().password !== pass) return alert("Wrong password");
 
   document.getElementById("home").style.display = "none";
   document.getElementById("main").style.display = "flex";
