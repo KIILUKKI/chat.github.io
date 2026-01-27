@@ -92,6 +92,7 @@ import {
   getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, limit, writeBatch 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Firebase config
 const app = initializeApp({
   apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
   projectId: "chat-fc8ef"
@@ -169,7 +170,6 @@ async function joinRoom(r) {
     });
     chat.scrollTop = chat.scrollHeight;
 
-    // Notifications
     if (lastMsg && document.hidden && lastMsg.name !== nick && Notification.permission === "granted") {
       new Notification("New message", { body: lastMsg.name + ": " + lastMsg.text });
     }
