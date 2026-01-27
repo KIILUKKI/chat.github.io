@@ -9,13 +9,110 @@
 body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b0f14; color: #e6edf3; display: flex; }
 #app { display: flex; width: 100%; height: 100%; position: relative; }
 
-/* HOME */
-#home { position: absolute; inset: 0; display: flex; }
-#homeLeft { width: 260px; background: #161b22; padding: 16px; overflow-y: auto; border-right:1px solid #0d1117;}
-#homeCenter { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-#nickRow { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; width: 320px; }
-#nick { flex: 1; padding: 10px; border-radius: 8px; border: none; background: #161b22; color: #fff; }
-#nickColor { width: 36px; height: 36px; border: none; cursor: pointer; outline: none; }
+/* HOME improvements */
+#home {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: linear-gradient(135deg, #0b0f14, #161b22);
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+#homeLeft {
+  width: 280px;
+  background: #161b22;
+  padding: 20px;
+  border-radius: 12px;
+  overflow-y: auto;
+  border-right: 1px solid #0d1117;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#homeLeft h2 {
+  margin:0 0 16px 0;
+  color:#fff;
+  font-weight:600;
+}
+
+.room {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #21262d;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition: 0.2s;
+}
+.room:hover {
+  background: #58a6ff;
+  color: #000;
+  transform: translateX(4px);
+}
+
+#homeCenter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #161b22;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  min-width: 320px;
+}
+
+#nickRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+#nick {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #21262d;
+  color: #fff;
+  font-size: 14px;
+}
+
+#nickColor {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s;
+}
+#nickColor:hover {
+  transform: scale(1.1);
+}
+
+#createRoom {
+  padding: 14px 28px;
+  border-radius: 14px;
+  background: #58a6ff;
+  color: #000;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 16px;
+  transition: .2s;
+}
+#createRoom:hover {
+  background:#3f83d0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
 
 /* ROOMS */
 .room { padding: 10px; border-radius: 8px; background: #161b22; margin-bottom: 8px; cursor: pointer; display:flex; justify-content:space-between; align-items:center;}
@@ -59,6 +156,7 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 /* CREATE/JOIN BUTTON */
 #createRoom { padding: 12px 24px; border-radius: 12px; background:#58a6ff; color:#000; border:none; font-weight:600; cursor:pointer; font-size:16px; transition:.15s; }
 #createRoom:hover { background:#3f83d0; }
+
 </style>
 </head>
 <body>
@@ -67,6 +165,7 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 <!-- HOME -->
 <div id="home">
   <div id="homeLeft">
+    <h2>Rooms</h2>
     <div id="roomList"></div>
   </div>
   <div id="homeCenter">
@@ -75,6 +174,9 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
       <input type="color" id="nickColor" value="#58a6ff">
     </div>
     <button id="createRoom">Create / Join Room</button>
+    <p style="margin-top:12px; font-size:12px; color:#8b949e; text-align:center;">
+      Pick a nickname and color before entering a room.
+    </p>
   </div>
 </div>
 
@@ -228,13 +330,10 @@ msg.addEventListener("keydown",async e=>{
   if(text==="/delete"){
     if(!confirm("Delete entire room and all messages?")) return;
     try{
-      // Delete all messages
       const msgs=await getDocs(collection(db,"rooms",room,"messages"));
       for(const d of msgs.docs) await deleteDoc(d.ref);
-      // Delete typing status
       const typingDocs=await getDocs(collection(db,"rooms",room,"typing"));
       for(const d of typingDocs.docs) await deleteDoc(d.ref);
-      // Delete room itself
       await deleteDoc(doc(db,"rooms",room));
       alert("Room deleted"); location.reload();
     }catch(err){console.error(err); alert("Failed to delete room");}
