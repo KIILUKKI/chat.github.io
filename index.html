@@ -183,8 +183,11 @@
       msg.value = "";
       if (!text) return;
 
+      /* ----- SLASH COMMANDS ----- */
       if (text === "/clear") {
-        chat.innerHTML = "";
+        const q = query(collection(db, "rooms", room, "messages"));
+        const s = await getDocs(q);
+        s.forEach(d => deleteDoc(d.ref)); // Remove all messages for all users
         return;
       }
 
@@ -196,10 +199,11 @@
         );
         const s = await getDocs(q);
         s.forEach(d => {
-          if (d.data().name === nick) deleteDoc(d.ref);
+          if (d.data().name === nick) deleteDoc(d.ref); // Remove the last message of the current user
         });
         return;
       }
+      /* -------------------------- */
 
       await addDoc(collection(db, "rooms", room, "messages"), {
         name: nick,
