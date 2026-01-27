@@ -152,9 +152,13 @@
       const q = query(collection(db, "rooms", room, "messages"), orderBy("time"));
       unsub = onSnapshot(q, s => {
         chat.innerHTML = "";
+        let lastMessage = null;
+
         s.forEach(d => {
           const m = d.data();
           const t = m.time?.toDate();
+          lastMessage = { name: m.name, text: m.text, time: t };
+
           chat.innerHTML += `
             <div class="message">
               <b>${m.name}</b>
@@ -162,13 +166,12 @@
               <div>${m.text}</div>
             </div>
           `;
-
-          if (document.hidden && m.name !== nick && t && (!lastNotifiedTime || t > lastNotifiedTime) && Notification.permission === "granted") {
-            new Notification("New message");
-          }
-
-          if (t) lastNotifiedTime = t;
         });
+
+        if (lastMessage && document.hidden && lastMessage.name !== nick && Notification.permission === "granted") {
+          new Notification("New message", { body: `${lastMessage.name}: ${lastMessage.text}` });
+        }
+
         chat.scrollTop = chat.scrollHeight;
       });
     }
