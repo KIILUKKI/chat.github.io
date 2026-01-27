@@ -6,33 +6,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * {box-sizing: border-box;}
-    body {margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #1e1f22; color: #dbdee1; display: flex;}
+    body {margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0d1117; color: #e6edf3; display: flex;}
     #app {display: flex; width: 100%; height: 100%;}
-    #sidebar {width: 240px; background: #2b2d31; padding: 12px; display: flex; flex-direction: column;}
+    #sidebar {width: 240px; background: #161b22; padding: 12px; display: flex; flex-direction: column;}
     #main {flex: 1; display: flex; flex-direction: column;}
-    #header {height: 48px; background: #313338; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #1f2023;}
+    #header {height: 48px; background: #21262d; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #161b22;}
     #headerLeft {display: flex; align-items: center; gap: 10px;}
-    #header button {background: none; border: none; color: #dbdee1; cursor: pointer; font-size: 14px;}
-    #header button:hover {color: #fff;}
-    #chat {flex: 1; padding: 16px; overflow-y: auto;}
-    .message {margin-bottom: 14px; position: relative;}
-    .message b {color: #fff;}
-    .time {font-size: 11px; color: #949ba4; margin-left: 6px;}
-    #inputBar {padding: 12px; background: #383a40; border-top: 1px solid #1f2023; display: flex; gap: 6px;}
-    #inputBar input {flex: 1; padding: 12px; border-radius: 8px; border: none; background: #1e1f22; color: #dbdee1;}
-    #home {position: absolute; inset: 0; background: #1e1f22; display: flex;}
-    #homeLeft {width: 240px; background: #2b2d31; padding: 12px;}
+    #header button {background: none; border: none; color: #e6edf3; cursor: pointer; font-size: 14px;}
+    #header button:hover {color: #58a6ff;}
+    #chat {flex: 1; padding: 16px; overflow-y: auto; background: #0d1117;}
+    .message {margin-bottom: 14px; position: relative; border-radius: 8px; padding: 8px; background: #161b22;}
+    .message b {color: #58a6ff;}
+    .time {font-size: 11px; color: #8b949e; margin-left: 6px;}
+    #inputBar {padding: 12px; background: #21262d; border-top: 1px solid #161b22; display: flex; gap: 6px;}
+    #inputBar input {flex: 1; padding: 12px; border-radius: 8px; border: none; background: #0d1117; color: #e6edf3;}
+    #home {position: absolute; inset: 0; background: #0d1117; display: flex;}
+    #homeLeft {width: 240px; background: #161b22; padding: 12px;}
     #homeCenter {flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;}
     #homeCenter input, #homeCenter button {width: 300px; padding: 14px; margin-bottom: 12px; border-radius: 8px; border: none;}
-    #homeCenter input {background: #2b2d31; color: #fff;}
-    #homeCenter button {background: #5865f2; color: #fff; font-weight: 600; cursor: pointer;}
+    #homeCenter input {background: #161b22; color: #e6edf3;}
+    #homeCenter button {background: #58a6ff; color: #fff; font-weight: 600; cursor: pointer;}
+    /* HUONELISTA */
+    .room {padding: 10px; margin-bottom: 8px; border-radius: 8px; background: #161b22; cursor: pointer;}
+    .room:hover {background: #21262d;}
+    .room + .room {margin-top: 10px;} /* Lisää väli huoneiden välille */
   </style>
 </head>
 <body>
   <div id="app">
     <!-- HOME -->
     <div id="home">
-      <div id="homeLeft"><div id="roomList"></div></div>
+      <div id="homeLeft">
+        <div id="roomList"></div>
+      </div>
       <div id="homeCenter">
         <input id="nick" placeholder="Username">
         <button id="createRoom">Create / Join Room</button>
@@ -109,13 +115,11 @@
       const existingRoom = await getDoc(doc(db, "rooms", roomName));
       if (existingRoom.exists()) return alert("Room already exists!");
 
-      // Kysy salasanaa huoneelle
       const password = prompt("Set a password for the room (optional):");
       const roomData = { password: password || "" };
 
-      // Create room in Firestore
       await setDoc(doc(db, "rooms", roomName), roomData);
-      loadRooms(); // Reload the rooms list
+      loadRooms();
       alert(`Room #${roomName} created successfully!`);
     };
 
