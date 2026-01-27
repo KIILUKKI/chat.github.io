@@ -34,6 +34,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color
 </style>
 </head>
 <body>
+
 <div id="app">
 
 <!-- HOME -->
@@ -76,23 +77,31 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#1e1f22;color
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection,
+  addDoc, getDocs, query, orderBy,
+  onSnapshot, serverTimestamp, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* FIREBASE */
 const app = initializeApp({
   apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
   projectId:"chat-fc8ef"
 });
-
 const db = getFirestore(app);
 
+/* STATE */
 let room="", nick="", unsub;
+let lastNotifiedTime = null;
 
-const chat=document.getElementById("chat");
-const typingEl=document.getElementById("typing");
-const msg=document.getElementById("msg");
+/* ELEMENTS */
+const chat = document.getElementById("chat");
+const typingEl = document.getElementById("typing");
+const msg = document.getElementById("msg");
 
-// Persistointi
-document.getElementById("nick").value = localStorage.getItem("nick") || "";
+/* PERSIST */
+document.getElementById("nick").value =
+  localStorage.getItem("nick") || "";
 
 /* LOAD ROOMS */
 async function loadRooms(){
@@ -112,15 +121,17 @@ loadRooms();
 async function join(r){
   const pass=prompt("Password");
   if(pass===null) return;
-  nick=document.getElementById("nick").value||("Anon"+Math.floor(Math.random()*1000));
+
+  nick=document.getElementById("nick").value ||
+    ("Anon"+Math.floor(Math.random()*1000));
   localStorage.setItem("nick",nick);
 
   const ref=doc(db,"rooms",r);
   const snap=await getDoc(ref);
   if(!snap.exists()) await setDoc(ref,{password:pass});
-  else if(snap.data().password!==pass) return alert("Wrong");
+  else if(snap.data().password!==pass) return alert("Wrong password");
 
-  document.getElementById("home").style.display="none";
+  home.style.display="none";
   room=r;
   roomName.textContent="# "+r;
 
@@ -128,7 +139,7 @@ async function join(r){
   await setDoc(userRef,{online:true});
   window.addEventListener("beforeunload",()=>deleteDoc(userRef));
 
-  // Online-lista
+  /* USERS */
   onSnapshot(collection(db,"rooms",room,"users"),s=>{
     userList.innerHTML="";
     s.forEach(u=>{
@@ -138,54 +149,92 @@ async function join(r){
     });
   });
 
-  // Typing-per-user
-  const typingRef = collection(db,"rooms",room,"typing");
-  onSnapshot(typingRef,s=>{
+  /* TYPING */
+  onSnapshot(collection(db,"rooms",room,"typing"),s=>{
     const arr=[];
-    s.forEach(doc=>{
-      if(doc.id!==nick && doc.data().typing) arr.push(doc.id);
+    s.forEach(d=>{
+      if(d.id!==nick && d.data().typing) arr.push(d.id);
     });
-    typingEl.textContent=arr.length>0 ? arr.join(", ")+" is typing..." : "";
+    typingEl.textContent = arr.length
+      ? arr.join(", ")+" is typing..."
+      : "";
   });
 
-  // Messages
-  const q=query(collection(db,"rooms",r,"messages"),orderBy("time"));
+  /* MESSAGES + NOTIFICATION ONLY IF TAB INACTIVE */
+  const q=query(
+    collection(db,"rooms",room,"messages"),
+    orderBy("time")
+  );
+
   unsub=onSnapshot(q,s=>{
     chat.innerHTML="";
     s.forEach(d=>{
       const m=d.data();
-      const t=m.time?.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      chat.innerHTML+=`<div class="message"><b>${m.name}</b><span class="time">${t||""}</span><div>${m.text}</div></div>`;
+      const t=m.time?.toDate();
+      const timeStr=t
+        ? t.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})
+        : "";
 
-      // Chrome notification vain jos joku muu kirjoittaa
-      if(m.name!==nick && Notification.permission==="granted"){
-        const n = new Notification(`${m.name} sent a message`, { body:m.text });
-        setTimeout(()=>n.close(),500);
+      chat.innerHTML+=`
+        <div class="message">
+          <b>${m.name}</b>
+          <span class="time">${timeStr}</span>
+          <div>${m.text}</div>
+        </div>
+      `;
+
+      if(
+        document.hidden &&               // 👈 TAB EI AKTIIVINEN
+        m.name !== nick &&
+        t &&
+        (!lastNotifiedTime || t > lastNotifiedTime) &&
+        Notification.permission === "granted"
+      ){
+        new Notification("New message", {
+          body: `${m.name}: ${m.text}`
+        });
       }
+
+      if(t) lastNotifiedTime = t;
     });
+
     chat.scrollTop = chat.scrollHeight;
   });
 }
 
 /* SEND MESSAGE */
-msg.addEventListener("keydown", e=>{
-  if(e.key==="Enter" && msg.value){
-    const text = msg.value.trim();
-    addDoc(collection(db,"rooms",room,"messages"),{name:nick,text:text,time:serverTimestamp()});
+msg.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && msg.value.trim()){
+    addDoc(collection(db,"rooms",room,"messages"),{
+      name:nick,
+      text:msg.value.trim(),
+      time:serverTimestamp()
+    });
     msg.value="";
   } else {
-    setDoc(doc(db,"rooms",room,"typing",nick),{typing:msg.value.length>0});
-    setTimeout(()=>setDoc(doc(db,"rooms",room,"typing",nick),{typing:false}),1200);
+    setDoc(doc(db,"rooms",room,"typing",nick),
+      {typing:msg.value.length>0});
+    setTimeout(()=>setDoc(
+      doc(db,"rooms",room,"typing",nick),
+      {typing:false}),1200);
   }
 });
 
 /* UI */
-back.onclick=()=>{ if(unsub) unsub(); home.style.display="flex"; };
+back.onclick=()=>{
+  if(unsub) unsub();
+  home.style.display="flex";
+};
 toggleUsers.onclick=()=>users.classList.toggle("hidden");
-createRoom.onclick=()=>{ const r=prompt("Room name"); if(r) join(r); };
+createRoom.onclick=()=>{
+  const r=prompt("Room name");
+  if(r) join(r);
+};
 
-// Pyydetään ilmoitusoikeus
-if(Notification.permission!=="granted") Notification.requestPermission();
+/* REQUEST PERMISSION */
+if(Notification.permission!=="granted"){
+  Notification.requestPermission();
+}
 </script>
 </body>
 </html>
