@@ -6,217 +6,128 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  height: 100vh;
-  font-family: Inter, sans-serif;
-  background: #0b0f14;
-  color: #e6edf3;
-}
-#app {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
+*{box-sizing:border-box}
+body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
+#app{width:100%;height:100%;position:relative}
 
 /* HOME */
-#home {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  background: #0b0f14;
+#home{
+  position:absolute;
+  inset:0;
+  display:flex;
+  background:#0b0f14;
 }
-#homeLeft {
-  width: 260px;
-  height: 100%;
-  background: #161b22;
-  padding: 14px;
-  overflow-y: auto;
-  border-right: 1px solid #0d1117;
-}
-#homeLeft h2 {
-  margin: 0 0 14px 0;
-  font-weight: 600;
-}
-.room {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #21262d;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: .15s;
-}
-.room:hover {
-  background: #58a6ff;
-  color: #000;
-}
-#homeCenter {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-#nickRow {
-  display: flex;
-  gap: 12px;
-  width: 320px;
-  margin-bottom: 20px;
-}
-#nick {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #21262d;
-  color: #fff;
-}
-#nickColor {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-}
-#createRoom {
-  padding: 14px 28px;
-  border-radius: 12px;
-  background: #58a6ff;
-  color: #000;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-}
-#createRoom:hover { background:#3f83d0; }
-
-/* MAIN CHAT */
-#main {
-  display: none;
-  height: 100%;
-  flex-direction: column;
-}
-#header {
-  height: 52px;
-  background: #161b22;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  border-bottom: 1px solid #0d1117;
-}
-#header button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-  cursor: pointer;
-  margin-right: 10px;
-}
-#chatWrapper {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-#chatSidebar {
-  width: 260px;
-  background: #161b22;
-  border-right: 1px solid #0d1117;
-}
-#chatWrapperMain {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-#chat {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.message { display: flex; gap: 10px; }
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: #000;
-}
-.msg {
-  background: #161b22;
-  padding: 10px 14px;
-  border-radius: 10px;
-  width: 100%;
-  position: relative;
-}
-.time { font-size: 11px; color: #8b949e; margin-left: 6px; }
-.reply-btn {
-  position: absolute;
-  right: 8px;
-  top: 8px;
-  font-size: 12px;
-  color: #8b949e;
-  cursor: pointer;
-  opacity: 0;
-}
-.msg:hover .reply-btn { opacity: 1; }
-.reply-preview {
-  background: #0d1117;
-  border-left: 3px solid #58a6ff;
-  padding: 6px;
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-#replyBox {
-  display: none;
-  background: #21262d;
-  padding: 8px 14px;
-  font-size: 12px;
-}
-#inputBar {
-  padding: 14px;
-  background: #161b22;
-  border-top: 1px solid #0d1117;
-  display: flex;
-  gap: 8px;
-  position: relative;
-}
-#msg {
-  flex: 1;
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: #0d1117;
-  color: #fff;
-}
-#emojiPicker {
-  display: none;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px;
-  background: #21262d;
-  border-radius: 8px;
-  position: absolute;
-  bottom: 60px;
-  left: 14px;
-}
-#emojiPicker div { cursor:pointer; font-size:18px; }
-#emojiBtn {
-  border:none;
+#homeLeft{
+  width:260px;
+  height:100%;
   background:#161b22;
-  color:#fff;
-  font-size:18px;
+  padding:14px;
+  overflow-y:auto;
+  border-right:1px solid #0d1117;
+}
+#homeLeft h2{margin:0 0 14px 0}
+.room{
+  padding:10px 12px;
+  border-radius:8px;
+  background:#21262d;
+  margin-bottom:8px;
   cursor:pointer;
 }
-#typingIndicator {
-  font-size: 12px;
-  color: #8b949e;
-  margin-left: 16px;
+.room:hover{background:#58a6ff;color:#000}
+#homeCenter{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
+#nickRow{display:flex;gap:12px;width:320px;margin-bottom:20px}
+#nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
+#nickColor{width:42px;height:42px;border-radius:50%;border:none}
+#createRoom{
+  padding:14px 28px;
+  border-radius:12px;
+  background:#58a6ff;
+  color:#000;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* MAIN */
+#main{display:none;height:100%;flex-direction:column}
+#header{
+  height:52px;
+  background:#161b22;
+  display:flex;
+  align-items:center;
+  padding:0 14px;
+  border-bottom:1px solid #0d1117;
+}
+#header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;margin-right:10px}
+#chatWrapper{display:flex;flex:1;overflow:hidden}
+#chatSidebar{width:260px;background:#161b22;border-right:1px solid #0d1117}
+#chatWrapperMain{flex:1;display:flex;flex-direction:column}
+#chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+
+/* messages */
+.message{display:flex;gap:10px}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;color:#000
+}
+.msg{
+  background:#161b22;
+  padding:10px 14px;
+  border-radius:10px;
+  width:100%;
+  position:relative;
+}
+.time{font-size:11px;color:#8b949e;margin-left:6px}
+.reply-btn{
+  position:absolute;right:8px;top:8px;
+  font-size:12px;color:#8b949e;
+  cursor:pointer;opacity:0
+}
+.msg:hover .reply-btn{opacity:1}
+.reply-preview{
+  background:#0d1117;
+  border-left:3px solid #58a6ff;
+  padding:6px;
+  font-size:12px;
+  margin-bottom:6px;
+}
+
+/* input */
+#replyBox{display:none;background:#21262d;padding:8px 14px;font-size:12px}
+#replyBox span{color:#58a6ff}
+#inputBar{
+  padding:14px;
+  background:#161b22;
+  border-top:1px solid #0d1117;
+  display:flex;
+  gap:8px;
+  position:relative;
+}
+#msg{flex:1;padding:12px;border-radius:8px;border:none;background:#0d1117;color:#fff}
+
+/* emoji */
+#emojiPicker{
+  display:none;
+  flex-wrap:wrap;
+  gap:4px;
+  padding:6px;
+  background:#21262d;
+  border-radius:8px;
+  position:absolute;
+  bottom:60px;
+  left:14px;
+}
+#emojiPicker div{cursor:pointer;font-size:18px}
+#emojiBtn{border:none;background:#161b22;color:#fff;font-size:18px;cursor:pointer}
+
+#typingIndicator{font-size:12px;color:#8b949e;margin-left:16px}
 </style>
 </head>
 
@@ -253,7 +164,7 @@ body {
 
   <div id="replyBox"></div>
   <div id="inputBar">
-    <input id="msg" placeholder="Message... (/clear /delete)">
+    <input id="msg" placeholder="Message... (/clear /delete /deletelast)">
     <button id="emojiBtn">😊</button>
     <div id="emojiPicker"></div>
   </div>
@@ -270,32 +181,35 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
-  projectId: "chat-fc8ef"
+  apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
+  projectId:"chat-fc8ef"
 });
 const db = getFirestore(app);
 
-const chat = document.getElementById("chat");
-const msg = document.getElementById("msg");
-const roomList = document.getElementById("roomList");
-const roomName = document.getElementById("roomName");
-const emojiPicker = document.getElementById("emojiPicker");
-const nickInput = document.getElementById("nick");
-const nickColorInput = document.getElementById("nickColor");
+/* DOM */
+const chat=document.getElementById("chat");
+const msg=document.getElementById("msg");
+const roomList=document.getElementById("roomList");
+const replyBox=document.getElementById("replyBox");
+const roomName=document.getElementById("roomName");
+const emojiPicker=document.getElementById("emojiPicker");
+const emojiBtn=document.getElementById("emojiBtn");
+const typingIndicator=document.getElementById("typingIndicator");
+const nickInput=document.getElementById("nick");
+const nickColorInput=document.getElementById("nickColor");
 
 let room="", nick="", nickColor="#58a6ff", replyTo=null;
 
 /* load nick */
-nickInput.value = localStorage.getItem("nick") || "";
-nickColorInput.value = localStorage.getItem("nickColor") || "#58a6ff";
-nickColorInput.oninput = () =>
-  localStorage.setItem("nickColor", nickColorInput.value);
+nickInput.value=localStorage.getItem("nick")||"";
+nickColorInput.value=localStorage.getItem("nickColor")||"#58a6ff";
+nickColorInput.oninput=()=>localStorage.setItem("nickColor",nickColorInput.value);
 
-/* rooms */
+/* load rooms */
 async function loadRooms(){
   roomList.innerHTML="";
-  const snap = await getDocs(collection(db,"rooms"));
-  snap.forEach(r=>{
+  const s=await getDocs(collection(db,"rooms"));
+  s.forEach(r=>{
     const d=document.createElement("div");
     d.className="room";
     d.textContent="# "+r.id;
@@ -305,25 +219,24 @@ async function loadRooms(){
 }
 
 /* create/join */
-createRoom.onclick = async ()=>{
-  const r = prompt("Room name"); if(!r) return;
-  const p = prompt("Password (optional)");
-  const ref = doc(db,"rooms",r);
+createRoom.onclick=async()=>{
+  const r=prompt("Room name"); if(!r)return;
+  const p=prompt("Password (optional)");
+  const ref=doc(db,"rooms",r);
   if(!(await getDoc(ref)).exists())
     await setDoc(ref,{password:p||"",created:serverTimestamp()});
   joinRoom(r);
 };
 
 async function joinRoom(r){
-  const ref = doc(db,"rooms",r);
-  const snap = await getDoc(ref);
-  if(!snap.exists()) return alert("Room doesn't exist");
+  const ref=doc(db,"rooms",r);
+  const snap=await getDoc(ref);
+  if(!snap.exists())return alert("Room doesn't exist");
+  const pass=prompt("Password");
+  if(pass!==snap.data().password)return alert("Wrong password");
 
-  const pass = prompt("Password");
-  if(pass!==snap.data().password) return alert("Wrong password");
-
-  nick = nickInput.value || ("Anon"+Math.floor(Math.random()*1000));
-  nickColor = nickColorInput.value;
+  nick=nickInput.value||("Anon"+Math.floor(Math.random()*1000));
+  nickColor=nickColorInput.value;
   localStorage.setItem("nick",nick);
   localStorage.setItem("nickColor",nickColor);
 
@@ -332,51 +245,94 @@ async function joinRoom(r){
   room=r;
   roomName.textContent="# "+r;
 
-  onSnapshot(
-    query(collection(db,"rooms",room,"messages"),orderBy("time")),
-    snap=>{
-      chat.innerHTML="";
-      snap.forEach(d=>{
-        const m=d.data();
-        const t=m.time?.toDate();
-        chat.innerHTML+=`
-          <div class="message">
-            <div class="avatar" style="background:${m.color}">${m.name[0]}</div>
-            <div class="msg">
-              <b style="color:${m.color}">${m.name}</b>
-              <span class="time">${t?t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):""}</span>
-              <div>${m.text}</div>
-            </div>
-          </div>`;
-      });
-      chat.scrollTop=chat.scrollHeight;
-    }
-  );
+  onSnapshot(query(collection(db,"rooms",room,"messages"),orderBy("time")),snap=>{
+    chat.innerHTML="";
+    snap.forEach(d=>{
+      const m=d.data();
+      const t=m.time?.toDate();
+      const el=document.createElement("div");
+      el.className="message";
+      el.innerHTML=`
+        <div class="avatar" style="background:${m.color}">${m.name[0]}</div>
+        <div class="msg">
+          ${m.reply?`<div class="reply-preview"><b>${m.reply.name}</b>: ${m.reply.text}</div>`:""}
+          <b style="color:${m.color}">${m.name}</b>
+          <span class="time">${t?t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):""}</span>
+          <div>${m.text}</div>
+          <div class="reply-btn" data-name="${m.name}" data-text="${m.text}">reply</div>
+        </div>`;
+      chat.appendChild(el);
+    });
+    chat.scrollTop=chat.scrollHeight;
+  });
+
+  const typingRef=collection(db,"rooms",room,"typing");
+  onSnapshot(typingRef,s=>{
+    const names=[];
+    s.forEach(d=>{if(d.id!==nick && d.data().typing)names.push(d.id)});
+    typingIndicator.textContent=names.length?names.join(", ")+" typing...":"";
+  });
+
+  let tt;
+  msg.oninput=()=>{
+    setDoc(doc(typingRef,nick),{typing:true});
+    clearTimeout(tt);
+    tt=setTimeout(()=>setDoc(doc(typingRef,nick),{typing:false}),1500);
+  };
 }
 
-/* send */
-msg.addEventListener("keydown", async e=>{
-  if(e.key!=="Enter") return;
+/* reply */
+chat.onclick=e=>{
+  const b=e.target.closest(".reply-btn");
+  if(!b)return;
+  replyTo={name:b.dataset.name,text:b.dataset.text};
+  replyBox.style.display="block";
+  replyBox.innerHTML=`Replying to <span>${replyTo.name}</span>
+    <button onclick="cancelReply()">x</button>`;
+};
+window.cancelReply=()=>{
+  replyTo=null;
+  replyBox.style.display="none";
+};
+
+/* send + commands */
+msg.addEventListener("keydown",async e=>{
+  if(e.key!=="Enter")return;
   const text=msg.value.trim();
   msg.value="";
-  if(!text) return;
+  if(!text)return;
 
   if(text==="/clear"){
     const msgs=await getDocs(collection(db,"rooms",room,"messages"));
-    for(const d of msgs.docs) await deleteDoc(d.ref);
+    for(const d of msgs.docs)await deleteDoc(d.ref);
+    return;
+  }
+
+  if(text==="/delete"){
+    if(!confirm("Delete entire room?"))return;
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
+    for(const d of msgs.docs)await deleteDoc(d.ref);
+    const typing=await getDocs(collection(db,"rooms",room,"typing"));
+    for(const d of typing.docs)await deleteDoc(d.ref);
+    await deleteDoc(doc(db,"rooms",room));
+    location.reload();
     return;
   }
 
   await addDoc(collection(db,"rooms",room,"messages"),{
     name:nick,
     text,
+    reply:replyTo,
     color:nickColor,
     time:serverTimestamp()
   });
+
+  replyTo=null;
+  replyBox.style.display="none";
 });
 
 /* emoji */
-["😀","😂","😎","😍","👍","❤️","🎉","🤔","🔥"].forEach(e=>{
+["😀","😂","😎","😍","👍","❤️","🎉","🤔","🔥","🙌"].forEach(e=>{
   const d=document.createElement("div");
   d.textContent=e;
   d.onclick=()=>msg.value+=e;
@@ -384,6 +340,7 @@ msg.addEventListener("keydown", async e=>{
 });
 emojiBtn.onclick=()=>emojiPicker.style.display=
   emojiPicker.style.display==="flex"?"none":"flex";
+msg.onfocus=()=>emojiPicker.style.display="none";
 
 back.onclick=()=>location.reload();
 
