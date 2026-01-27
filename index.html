@@ -1,208 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MiniChat – Discord Style</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    * {box-sizing: border-box;}
-    body {margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0d1117; color: #e6edf3; display: flex;}
-    #app {display: flex; width: 100%; height: 100%;}
-    #sidebar {width: 240px; background: #161b22; padding: 12px; display: flex; flex-direction: column;}
-    #main {flex: 1; display: flex; flex-direction: column;}
-    #header {height: 48px; background: #21262d; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #161b22;}
-    #headerLeft {display: flex; align-items: center; gap: 10px;}
-    #header button {background: none; border: none; color: #e6edf3; cursor: pointer; font-size: 14px;}
-    #header button:hover {color: #58a6ff;}
-    #chat {flex: 1; padding: 16px; overflow-y: auto; background: #0d1117;}
-    .message {margin-bottom: 14px; position: relative; border-radius: 8px; padding: 8px; background: #161b22;}
-    .time {font-size: 11px; color: #8b949e; margin-left: 6px;}
-    #inputBar {padding: 12px; background: #21262d; border-top: 1px solid #161b22; display: flex; gap: 6px;}
-    #inputBar input {flex: 1; padding: 12px; border-radius: 8px; border: none; background: #0d1117; color: #e6edf3;}
-    #home {position: absolute; inset: 0; background: #0d1117; display: flex;}
-    #homeLeft {width: 240px; background: #161b22; padding: 12px;}
-    #homeCenter {flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;}
-    #homeCenter input, #homeCenter button {width: 300px; padding: 14px; margin-bottom: 12px; border-radius: 8px; border: none;}
-    #homeCenter input {background: #161b22; color: #e6edf3;}
-    #homeCenter button {background: #58a6ff; color: #fff; font-weight: 600; cursor: pointer;}
+<meta charset="UTF-8">
+<title>MiniChat – Discord Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-    /* HUONELISTA */
-    .room {padding: 10px; margin-bottom: 8px; border-radius: 8px; background: #161b22; cursor: pointer;}
-    .room:hover {background: #21262d;}
-    .room + .room {margin-top: 10px;}
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; height: 100vh;
+  font-family: Inter, sans-serif;
+  background: #0d1117; color: #e6edf3;
+  display: flex;
+}
+#app { display: flex; width: 100%; height: 100%; }
 
-    /* NEW: nick + color row */
-    #nickRow {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      align-items: center;
-    }
-    #nickColor {
-      width: 48px;
-      height: 48px;
-      padding: 0;
-      border: none;
-      background: none;
-      cursor: pointer;
-    }
-  </style>
+/* LAYOUT */
+#sidebar { width: 240px; background: #161b22; padding: 12px; }
+#main { flex: 1; display: flex; flex-direction: column; }
+#header {
+  height: 48px; background: #21262d;
+  display: flex; align-items: center;
+  padding: 0 12px; border-bottom: 1px solid #161b22;
+}
+#header button {
+  background: none; border: none;
+  color: #e6edf3; cursor: pointer;
+}
+#header button:hover { color: #58a6ff; }
+
+/* CHAT */
+#chat { flex: 1; padding: 16px; overflow-y: auto; }
+.message {
+  background: #161b22;
+  padding: 8px; border-radius: 8px;
+  margin-bottom: 14px;
+  position: relative;
+}
+.time { font-size: 11px; color: #8b949e; margin-left: 6px; }
+
+/* INPUT */
+#inputBar {
+  padding: 12px; background: #21262d;
+  border-top: 1px solid #161b22;
+}
+#inputBar input {
+  width: 100%; padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #0d1117; color: #e6edf3;
+}
+
+/* HOME */
+#home { position: absolute; inset: 0; background: #0d1117; display: flex; }
+#homeLeft { width: 240px; background: #161b22; padding: 12px; }
+#homeCenter {
+  flex: 1; display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#homeCenter input, #homeCenter button {
+  width: 300px; padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 8px; border: none;
+}
+#homeCenter input { background: #161b22; color: #e6edf3; }
+#homeCenter button {
+  background: #58a6ff; color: #fff;
+  font-weight: 600; cursor: pointer;
+}
+
+/* ROOMS */
+.room {
+  padding: 10px; border-radius: 8px;
+  background: #161b22;
+  cursor: pointer; margin-bottom: 8px;
+}
+.room:hover { background: #21262d; }
+
+/* NICK + COLOR */
+#nickRow { display: flex; gap: 8px; margin-bottom: 12px; }
+#nickColor {
+  width: 48px; height: 48px;
+  border: none; cursor: pointer;
+}
+
+/* REPLY */
+.reply-btn {
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 12px;
+  color: #8b949e;
+  cursor: pointer;
+}
+.reply-btn:hover { color: #58a6ff; }
+
+.reply-preview {
+  background: #0d1117;
+  border-left: 3px solid #58a6ff;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #8b949e;
+}
+
+#replyBox {
+  display: none;
+  background: #161b22;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-left: 3px solid #58a6ff;
+}
+#replyBox span { color: #58a6ff; }
+#replyBox button {
+  background: none; border: none;
+  color: #8b949e;
+  cursor: pointer;
+  margin-left: 8px;
+}
+</style>
 </head>
 
 <body>
 <div id="app">
 
-  <!-- HOME -->
-  <div id="home">
-    <div id="homeLeft">
-      <div id="roomList"></div>
-    </div>
-
-    <div id="homeCenter">
-      <!-- NEW: nick + color -->
-      <div id="nickRow">
-        <input id="nick" placeholder="Username">
-        <input type="color" id="nickColor"> <!-- NEW -->
-      </div>
-      <button id="createRoom">Create / Join Room</button>
-    </div>
+<!-- HOME -->
+<div id="home">
+  <div id="homeLeft">
+    <div id="roomList"></div>
   </div>
-
-  <!-- SIDEBAR -->
-  <div id="sidebar"></div>
-
-  <!-- MAIN -->
-  <div id="main">
-    <div id="header">
-      <div id="headerLeft">
-        <button id="back">← Return</button>
-        <span id="roomName">Select room</span>
-      </div>
+  <div id="homeCenter">
+    <div id="nickRow">
+      <input id="nick" placeholder="Username">
+      <input type="color" id="nickColor">
     </div>
-
-    <div id="chat"></div>
-    <div id="typing"></div>
-
-    <div id="inputBar">
-      <input id="msg" placeholder="Message... (/clear, /delete, /deletelast)">
-    </div>
+    <button id="createRoom">Create / Join Room</button>
   </div>
 </div>
 
+<div id="sidebar"></div>
+
+<div id="main">
+  <div id="header">
+    <button id="back">← Return</button>
+    <span id="roomName" style="margin-left:10px">Select room</span>
+  </div>
+
+  <div id="chat"></div>
+  <div id="replyBox"></div>
+
+  <div id="inputBar">
+    <input id="msg" placeholder="Message... (/clear, /delete, /deletelast)">
+  </div>
+</div>
+
+</div>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, collection,
-    addDoc, getDocs, query, orderBy,
-    onSnapshot, serverTimestamp, deleteDoc, limit, writeBatch
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection,
+  addDoc, getDocs, query, orderBy,
+  onSnapshot, serverTimestamp, deleteDoc, limit, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const app = initializeApp({
-    apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
-    projectId: "chat-fc8ef"
+const app = initializeApp({
+  apiKey: "AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
+  projectId: "chat-fc8ef"
+});
+const db = getFirestore(app);
+
+/* STATE */
+let room = "", nick = "", replyingTo = null;
+
+/* ELEMENTS */
+const chat = document.getElementById("chat");
+const msg = document.getElementById("msg");
+const roomList = document.getElementById("roomList");
+const replyBox = document.getElementById("replyBox");
+const nickInput = document.getElementById("nick");
+const nickColorInput = document.getElementById("nickColor");
+
+/* PERSIST */
+nickInput.value = localStorage.getItem("nick") || "";
+nickColorInput.value = localStorage.getItem("nickColor") || "#58a6ff";
+nickColorInput.oninput = () =>
+  localStorage.setItem("nickColor", nickColorInput.value);
+
+/* LOAD ROOMS */
+async function loadRooms() {
+  roomList.innerHTML = "";
+  const s = await getDocs(collection(db, "rooms"));
+  s.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "room";
+    d.textContent = "# " + r.id;
+    d.onclick = () => join(r.id);
+    roomList.appendChild(d);
   });
-  const db = getFirestore(app);
+}
+loadRooms();
 
-  let room = "", nick = "", unsub;
-
-  const chat = document.getElementById("chat");
-  const msg = document.getElementById("msg");
-  const roomList = document.getElementById("roomList");
-  const nickInput = document.getElementById("nick");
-  const nickColorInput = document.getElementById("nickColor");
-
-  /* PERSIST */
-  nickInput.value = localStorage.getItem("nick") || "";
-  nickColorInput.value = localStorage.getItem("nickColor") || "#58a6ff"; // NEW
-
-  nickColorInput.oninput = () => {
-    localStorage.setItem("nickColor", nickColorInput.value); // NEW
-  };
-
-  async function loadRooms() {
-    roomList.innerHTML = "";
-    const s = await getDocs(collection(db, "rooms"));
-    s.forEach(r => {
-      const d = document.createElement("div");
-      d.className = "room";
-      d.textContent = "# " + r.id;
-      d.onclick = () => join(r.id);
-      roomList.appendChild(d);
-    });
-  }
+/* CREATE ROOM */
+createRoom.onclick = async () => {
+  const r = prompt("Room name:");
+  if (!r) return;
+  if ((await getDoc(doc(db, "rooms", r))).exists()) return alert("Exists");
+  await setDoc(doc(db, "rooms", r), { password: "" });
   loadRooms();
+};
 
-  document.getElementById("createRoom").onclick = async () => {
-    const roomName = prompt("Enter room name:");
-    if (!roomName) return;
+/* JOIN */
+async function join(r) {
+  nick = nickInput.value || "Anon" + Math.floor(Math.random()*1000);
+  localStorage.setItem("nick", nick);
 
-    const existingRoom = await getDoc(doc(db, "rooms", roomName));
-    if (existingRoom.exists()) return alert("Room already exists!");
+  document.getElementById("home").style.display = "none";
+  room = r;
+  roomName.textContent = "# " + r;
 
-    const password = prompt("Set a password for the room (optional):");
-    await setDoc(doc(db, "rooms", roomName), { password: password || "" });
-    loadRooms();
-  };
+  const q = query(collection(db, "rooms", room, "messages"), orderBy("time"));
+  onSnapshot(q, s => {
+    chat.innerHTML = "";
+    s.forEach(d => {
+      const m = d.data();
+      const t = m.time?.toDate();
+      chat.innerHTML += `
+      <div class="message">
+        <div class="reply-btn" onclick="reply('${m.name}','${m.text.replace(/'/g,"&#39;")}')">↩ Reply</div>
 
-  async function join(r) {
-    const pass = prompt("Password");
-    if (pass === null) return;
+        ${m.replyTo ? `
+          <div class="reply-preview">
+            <b>${m.replyTo.name}</b>: ${m.replyTo.text}
+          </div>` : ""}
 
-    nick = nickInput.value || ("Anon" + Math.floor(Math.random() * 1000));
-    const nickColor = nickColorInput.value; // NEW
-
-    localStorage.setItem("nick", nick);
-    localStorage.setItem("nickColor", nickColor);
-
-    const ref = doc(db, "rooms", r);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) await setDoc(ref, { password: pass });
-    else if (snap.data().password !== pass) return alert("Wrong");
-
-    document.getElementById("home").style.display = "none";
-    room = r;
-    roomName.textContent = "# " + r;
-
-    const q = query(collection(db, "rooms", room, "messages"), orderBy("time"));
-    unsub = onSnapshot(q, s => {
-      chat.innerHTML = "";
-      let lastMessage = null;
-
-      s.forEach(d => {
-        const m = d.data();
-        const t = m.time?.toDate();
-        lastMessage = m;
-
-        chat.innerHTML += `
-          <div class="message">
-            <b style="color:${m.color || "#58a6ff"}">${m.name}</b>
-            <span class="time">${t?.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) || ""}</span>
-            <div>${m.text}</div>
-          </div>
-        `;
-      });
-
-      chat.scrollTop = chat.scrollHeight;
+        <b style="color:${m.color}">${m.name}</b>
+        <span class="time">${t?.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})||""}</span>
+        <div>${m.text}</div>
+      </div>`;
     });
+    chat.scrollTop = chat.scrollHeight;
+  });
+}
+
+/* REPLY */
+window.reply = (name, text) => {
+  replyingTo = { name, text };
+  replyBox.style.display = "block";
+  replyBox.innerHTML = `Replying to <span>${name}</span>: ${text}
+    <button onclick="clearReply()">×</button>`;
+};
+window.clearReply = () => {
+  replyingTo = null;
+  replyBox.style.display = "none";
+};
+
+/* SEND */
+msg.addEventListener("keydown", async e => {
+  if (e.key !== "Enter") return;
+  const text = msg.value.trim();
+  msg.value = "";
+  if (!text) return;
+
+  /* COMMANDS */
+  if (text === "/clear") {
+    const s = await getDocs(collection(db, "rooms", room, "messages"));
+    const b = writeBatch(db);
+    s.forEach(d => b.delete(d.ref));
+    await b.commit(); return;
+  }
+  if (text === "/deletelast") {
+    const q = query(collection(db, "rooms", room, "messages"),
+      orderBy("time","desc"), limit(1));
+    const s = await getDocs(q);
+    s.forEach(d => { if (d.data().name === nick) deleteDoc(d.ref); });
+    return;
   }
 
-  msg.addEventListener("keydown", async e => {
-    if (e.key !== "Enter") return;
-    const text = msg.value.trim();
-    msg.value = "";
-    if (!text) return;
-
-    await addDoc(collection(db, "rooms", room, "messages"), {
-      name: nick,
-      color: localStorage.getItem("nickColor") || "#58a6ff", // NEW
-      text,
-      time: serverTimestamp()
-    });
+  await addDoc(collection(db, "rooms", room, "messages"), {
+    name: nick,
+    color: localStorage.getItem("nickColor"),
+    text,
+    replyTo: replyingTo,
+    time: serverTimestamp()
   });
 
-  back.onclick = () => location.reload();
+  clearReply();
+});
 
-  if (Notification.permission !== "granted") Notification.requestPermission();
+back.onclick = () => location.reload();
 </script>
 </body>
 </html>
