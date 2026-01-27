@@ -44,9 +44,13 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
 #replyBox { display: none; background: #21262d; padding: 8px 14px; font-size: 12px; }
 #replyBox span { color: #58a6ff; }
 #replyBox button { background: none; border: none; color: #8b949e; cursor: pointer; margin-left: 8px; }
-#inputBar { padding: 14px; background: #161b22; border-top: 1px solid #0d1117; display: flex; }
+#inputBar { padding: 14px; background: #161b22; border-top: 1px solid #0d1117; display: flex; align-items: center; gap: 8px; }
 #msg { flex: 1; padding: 14px; border-radius: 8px; border: none; background: #0d1117; color: #fff; }
 #createRoom { width: 320px; padding: 14px; border-radius: 10px; border: none; background: #58a6ff; font-weight: 600; color: #000; cursor: pointer; }
+
+/* Emoji picker */
+#emojiPicker { display:flex; flex-wrap:wrap; gap:4px; padding:4px; background:#21262d; border-radius:8px; position:absolute; bottom:60px; left:14px; display:none; z-index:1000; }
+#emojiPicker div { cursor:pointer; font-size:18px; }
 </style>
 </head>
 <body>
@@ -81,6 +85,8 @@ body { margin: 0; height: 100vh; font-family: Inter, sans-serif; background: #0b
   <div id="replyBox"></div>
   <div id="inputBar">
     <input id="msg" placeholder="Message... (/clear /delete /deletelast)">
+    <button id="emojiBtn">😊</button>
+    <div id="emojiPicker"></div>
   </div>
 </div>
 
@@ -105,6 +111,8 @@ const msg = document.getElementById("msg");
 const roomList = document.getElementById("roomList");
 const replyBox = document.getElementById("replyBox");
 const roomName = document.getElementById("roomName");
+const emojiPicker = document.getElementById("emojiPicker");
+const emojiBtn = document.getElementById("emojiBtn");
 
 // Load stored nick and color
 document.getElementById("nick").value = localStorage.getItem("nick") || "";
@@ -159,6 +167,9 @@ async function joinRoom(r, providedPass = null) {
   room = r;
   roomName.textContent = "# " + r;
 
+  // Typing collection reference
+  const typingRef = collection(db, "rooms", room, "typing");
+
   // Listen messages
   onSnapshot(query(collection(db, "rooms", room, "messages"), orderBy("time")), snapshot => {
     chat.innerHTML = "";
@@ -180,10 +191,33 @@ async function joinRoom(r, providedPass = null) {
       </div>`;
     });
     chat.scrollTop = chat.scrollHeight;
+  });
 
-    if (lastMsg && document.hidden && lastMsg.name !== nick && Notification.permission === "granted") {
-      new Notification("New message", { body: lastMsg.name + ": " + lastMsg.text });
-    }
+  // Typing indicator div
+  const typingDiv = document.createElement("div");
+  typingDiv.style.fontSize = "12px";
+  typingDiv.style.color = "#8b949e";
+  chat.appendChild(typingDiv);
+
+  // Listen typing updates
+  onSnapshot(typingRef, snapshot => {
+    const names = [];
+    snapshot.forEach(doc => {
+      if(doc.id !== nick && doc.data().typing) names.push(doc.id);
+    });
+    if(names.length === 0) typingDiv.textContent = "";
+    else if(names.length === 1) typingDiv.textContent = `${names[0]} is typing...`;
+    else typingDiv.textContent = `${names.join(", ")} are typing...`;
+  });
+
+  // Update typing status when user types
+  let typingTimeout;
+  msg.addEventListener("input", () => {
+    setDoc(doc(typingRef, nick), { typing: true });
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      setDoc(doc(typingRef, nick), { typing: false });
+    }, 1500);
   });
 }
 
@@ -253,6 +287,19 @@ document.getElementById("back").onclick = () => location.reload();
 
 // Request notifications
 if (Notification.permission !== "granted") Notification.requestPermission();
+
+// Emoji picker
+const emojis = ["😀","😂","😎","😍","👍","❤️","🎉","😢","🤔","🙌","🔥","💯"];
+emojis.forEach(e => {
+  const b = document.createElement("div");
+  b.textContent = e;
+  b.onclick = () => msg.value += e;
+  emojiPicker.appendChild(b);
+});
+
+emojiBtn.onclick = () => {
+  emojiPicker.style.display = emojiPicker.style.display === "none" ? "flex" : "none";
+};
 </script>
 </body>
 </html>
