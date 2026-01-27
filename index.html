@@ -58,7 +58,7 @@
       <div id="typing"></div>
 
       <div id="inputBar">
-        <input id="msg" placeholder="Message... (/clear, /delete)">
+        <input id="msg" placeholder="Message... (/clear, /delete, /deletelast)">
       </div>
     </div>
 
@@ -192,6 +192,28 @@
       }
 
       if (text === "/delete") {
+        // Delete the entire room and all its messages
+        const roomRef = doc(db, "rooms", room);
+        const messagesRef = collection(db, "rooms", room, "messages");
+        const usersRef = collection(db, "rooms", room, "users");
+
+        // Delete all messages in the room
+        const messages = await getDocs(messagesRef);
+        messages.forEach(d => deleteDoc(d.ref));
+
+        // Delete all users in the room
+        const users = await getDocs(usersRef);
+        users.forEach(u => deleteDoc(u.ref));
+
+        // Finally, delete the room itself
+        await deleteDoc(roomRef);
+
+        alert("Room and all its messages have been deleted.");
+        return;
+      }
+
+      if (text === "/deletelast") {
+        // Remove only the last sent message of the user
         const q = query(
           collection(db, "rooms", room, "messages"),
           orderBy("time", "desc"),
@@ -199,7 +221,7 @@
         );
         const s = await getDocs(q);
         s.forEach(d => {
-          if (d.data().name === nick) deleteDoc(d.ref); // Remove the last message of the current user
+          if (d.data().name === nick) deleteDoc(d.ref); // Remove the last message
         });
         return;
       }
