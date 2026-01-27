@@ -5,56 +5,48 @@
 <title>MiniChat</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#0b0f14;
-  --panel:#161b22;
-  --panel2:#1f2630;
-  --accent:#58a6ff;
-  --text:#e6edf3;
-  --muted:#8b949e;
-}
 *{box-sizing:border-box}
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3;display:flex}
-#app{display:flex;width:100%;height:100%}
+#app{display:flex;width:100%;height:100%;position:relative}
 
 /* HOME */
 #home{position:absolute;inset:0;display:flex}
-#homeLeft{width:260px;background:#161b22;padding:16px}
+#homeLeft{width:260px;background:#161b22;padding:16px;overflow-y:auto}
 #homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
-#nickRow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+#nickRow{display:flex;align-items:center;gap:10px;margin-bottom:12px;width:320px}
 #nick{flex:1;padding:10px;border-radius:8px;border:none;background:#161b22;color:#fff}
-#nickColor{width:36px;height:36px;border:none;border-radius:50%;cursor:pointer}
-#homeCenter button{width:320px;padding:14px;margin-top:8px;border-radius:10px;border:none;background:var(--accent);font-weight:600;color:#000;cursor:pointer}
+#nickColor{width:36px;height:36px;border:none;cursor:pointer;outline:none}
 
 /* ROOMS */
-.room{padding:10px;border-radius:8px;background:var(--panel);margin-bottom:8px;cursor:pointer}
-.room:hover{background:var(--panel2)}
+.room{padding:10px;border-radius:8px;background:#161b22;margin-bottom:8px;cursor:pointer}
+.room:hover{background:#21262d}
 
 /* MAIN */
 #main{flex:1;display:flex;flex-direction:column}
-#header{height:52px;background:var(--panel);display:flex;align-items:center;padding:0 14px;border-bottom:1px solid #0d1117}
+#header{height:52px;background:#161b22;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid #0d1117}
 #header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;margin-right:10px}
 #roomName{font-weight:600}
 #chatWrapper{display:flex;flex:1;overflow:hidden}
-#chatSidebar{width:260px;background:var(--panel);border-right:1px solid #0d1117}
+#chatSidebar{width:260px;background:#161b22;border-right:1px solid #0d1117}
 #chat{flex:1;padding:16px;overflow-y:auto;position:relative}
 
 /* MESSAGE */
 .message{display:flex;gap:10px;margin-bottom:14px}
 .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#000;flex-shrink:0}
-.msg{background:var(--panel);padding:10px 14px;border-radius:10px;width:100%;position:relative}
+.msg{background:#161b22;padding:10px 14px;border-radius:10px;width:100%;position:relative}
 .msg b{margin-right:6px}
-.time{font-size:11px;color:var(--muted)}
-.reply-btn{position:absolute;right:8px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0;transition:.15s}
+.time{font-size:11px;color:#8b949e}
+.reply-btn{position:absolute;right:8px;top:8px;font-size:12px;color:#8b949e;cursor:pointer;opacity:0;transition:.15s}
 .msg:hover .reply-btn{opacity:1}
-.reply-preview{background:#0d1117;border-left:3px solid var(--accent);padding:6px;font-size:12px;margin-bottom:6px}
+.reply-preview{background:#0d1117;border-left:3px solid #58a6ff;padding:6px;font-size:12px;margin-bottom:6px}
 
 /* INPUT */
-#replyBox{display:none;background:var(--panel2);padding:8px 14px;font-size:12px}
-#replyBox span{color:var(--accent)}
-#replyBox button{background:none;border:none;color:var(--muted);cursor:pointer;margin-left:8px}
-#inputBar{padding:14px;background:var(--panel);border-top:1px solid #0d1117}
+#replyBox{display:none;background:#21262d;padding:8px 14px;font-size:12px}
+#replyBox span{color:#58a6ff}
+#replyBox button{background:none;border:none;color:#8b949e;cursor:pointer;margin-left:8px}
+#inputBar{padding:14px;background:#161b22;border-top:1px solid #0d1117}
 #msg{width:100%;padding:14px;border-radius:8px;border:none;background:#0d1117;color:#fff}
+#createRoom{width:320px;padding:14px;border-radius:10px;border:none;background:#58a6ff;font-weight:600;color:#000;cursor:pointer}
 </style>
 </head>
 <body>
@@ -74,6 +66,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   </div>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="header">
     <button id="back">←</button>
