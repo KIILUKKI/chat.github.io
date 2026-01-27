@@ -125,10 +125,10 @@ async function loadRooms() {
 }
 loadRooms();
 
-// Create room
+// Create or join room
 document.getElementById("createRoom").onclick = async () => {
   const r = prompt("Room name"); if (!r) return;
-  const pass = prompt("Password (optional)"); // sala sana tallennetaan
+  const pass = prompt("Password (optional)"); 
   const roomRef = doc(db, "rooms", r);
   if (!(await getDoc(roomRef)).exists()) {
     await setDoc(roomRef, { password: pass || "", created: serverTimestamp() });
