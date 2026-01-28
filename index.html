@@ -10,246 +10,337 @@
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
 #app{width:100%;height:100%;position:relative}
 
-/* LOGIN */
-#login{
-position:absolute;inset:0;
-display:flex;flex-direction:column;
-justify-content:center;align-items:center;
-gap:12px;background:#0b0f14;z-index:10
-}
-#login input{
-width:260px;padding:14px;
-border-radius:10px;border:none;
-background:#21262d;color:#fff
-}
-#login button{
-padding:14px 28px;border-radius:12px;
-background:#58a6ff;color:#000;
-border:none;font-weight:600;cursor:pointer
-}
-
 /* HOME */
-#home{
-position:absolute;inset:0;
-display:none;               /* ← KORJATTU */
-background:#0b0f14;
-}
+#home{position:absolute;inset:0;display:flex;background:#0b0f14}
 #homeLeft{
-width:260px;height:100%;
-background:#161b22;padding:14px;
-overflow-y:auto;border-right:1px solid #0d1117
+  width:260px;height:100%;
+  background:#161b22;padding:14px;
+  overflow-y:auto;border-right:1px solid #0d1117
 }
+#homeLeft h2{margin:0 0 14px}
 .room{
-padding:10px 12px;border-radius:8px;
-background:#21262d;margin-bottom:8px;
-cursor:pointer
+  padding:10px 12px;border-radius:8px;
+  background:#21262d;margin-bottom:8px;
+  cursor:pointer
 }
 .room:hover{background:#58a6ff;color:#000}
 #homeCenter{
-flex:1;display:flex;flex-direction:column;
-justify-content:center;align-items:center
+  flex:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:center
 }
 #nickRow{display:flex;gap:12px;width:320px;margin-bottom:20px}
 #nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
-#nickColor{width:42px;height:42px;border:none}
+#nickColor{width:42px;height:42px;border-radius:50%;border:none}
 #createRoom{
-padding:14px 28px;border-radius:12px;
-background:#58a6ff;color:#000;
-border:none;font-weight:600;cursor:pointer
+  padding:14px 28px;border-radius:12px;
+  background:#58a6ff;color:#000;
+  border:none;font-weight:600;cursor:pointer
 }
 
 /* MAIN */
-#main{
-display:none;
-height:100%;
-flex-direction:column;
-}
-
-/* CHAT */
-#chatWrapper{flex:1;display:flex;overflow:hidden}
-#chatSidebar{
-width:260px;background:#161b22;
-border-right:1px solid #0d1117
-}
-#chatWrapperMain{flex:1;display:flex;flex-direction:column}
-
-/* HEADER */
+#main{display:none;height:100%;flex-direction:column}
 #header{
-height:52px;background:#161b22;
-display:flex;align-items:center;
-padding:0 14px;border-bottom:1px solid #0d1117
+  height:52px;background:#161b22;
+  display:flex;align-items:center;
+  padding:0 14px;border-bottom:1px solid #0d1117
 }
 #header button{
-background:none;border:none;color:#fff;
-font-size:18px;cursor:pointer;margin-right:10px
+  background:none;border:none;color:#fff;
+  font-size:18px;cursor:pointer;margin-right:10px
+}
+#chatWrapper{display:flex;flex:1;overflow:hidden}
+#chatSidebar{width:260px;background:#161b22;border-right:1px solid #0d1117}
+#chatWrapperMain{flex:1;display:flex;flex-direction:column}
+#chat{
+  flex:1;padding:16px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:10px
 }
 
-/* CHAT */
-#chat{
-flex:1;padding:16px;
-overflow-y:auto;
-display:flex;
-flex-direction:column;
-gap:10px
-}
+/* messages */
 .message{display:flex;gap:10px}
 .avatar{
-width:36px;height:36px;border-radius:50%;
-display:flex;align-items:center;justify-content:center;
-font-weight:600;color:#000
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;color:#000
 }
 .msg{
-background:#161b22;padding:10px 14px;
-border-radius:10px;width:100%
+  background:#161b22;padding:10px 14px;
+  border-radius:10px;width:100%;position:relative
+}
+.time{font-size:11px;color:#8b949e;margin-left:6px}
+.reply-btn{
+  position:absolute;right:8px;top:8px;
+  font-size:12px;color:#8b949e;
+  cursor:pointer;opacity:0
+}
+.msg:hover .reply-btn{opacity:1}
+.reply-preview{
+  background:#0d1117;border-left:3px solid #58a6ff;
+  padding:6px;font-size:12px;margin-bottom:6px
 }
 
-/* INPUT */
+/* input */
+#replyBox{display:none;background:#21262d;padding:8px 14px;font-size:12px;color:#fff}
+#replyBox span{color:#58a6ff}
 #inputBar{
-padding:14px;background:#161b22;
-border-top:1px solid #0d1117;
-display:flex;gap:8px
+  padding:14px;background:#161b22;
+  border-top:1px solid #0d1117;
+  display:flex;gap:8px;position:relative;align-items:center
 }
-#msg{
-flex:1;padding:12px;border-radius:8px;
-border:none;background:#0d1117;color:#fff
+#msg{flex:1;padding:12px;border-radius:8px;border:none;background:#0d1117;color:#fff}
+
+/* emoji */
+#emojiPicker{
+  display:none;flex-wrap:wrap;gap:4px;
+  padding:6px;background:#21262d;
+  border-radius:8px;position:absolute;
+  bottom:60px;left:14px;
+  max-width:320px;max-height:200px;overflow-y:auto
 }
+#emojiPicker div{cursor:pointer;font-size:18px}
+#emojiBtn{border:none;background:#161b22;color:#fff;font-size:18px;cursor:pointer}
+
+/* Typing */
+#typingIndicator{font-size:12px;color:#8b949e;margin-left:16px}
 </style>
 </head>
 
 <body>
 <div id="app">
 
-<div id="login">
-<h2>Login</h2>
-<input id="loginNick" placeholder="Username">
-<input id="loginPass" type="password" placeholder="Password">
-<button id="loginBtn">Login / Register</button>
-</div>
-
 <div id="home">
-<div id="homeLeft">
-<h2>Rooms</h2>
-<div id="roomList"></div>
-</div>
-<div id="homeCenter">
-<div id="nickRow">
-<input id="nick" placeholder="Username">
-<input type="color" id="nickColor" value="#58a6ff">
-</div>
-<button id="createRoom">Create / Join Room</button>
-</div>
+  <div id="homeLeft">
+    <h2>Rooms</h2>
+    <div id="roomList"></div>
+  </div>
+  <div id="homeCenter">
+    <div id="nickRow">
+      <input id="nick" placeholder="Username">
+      <input type="color" id="nickColor" value="#58a6ff">
+    </div>
+    <button id="createRoom">Create / Join Room</button>
+  </div>
 </div>
 
 <div id="main">
-<div id="header">
-<button id="back">←</button>
-<span id="roomName"></span>
+  <div id="header">
+    <button id="back">←</button>
+    <span id="roomName"></span>
+  </div>
+
+  <div id="chatWrapper">
+    <div id="chatSidebar"></div>
+    <div id="chatWrapperMain">
+      <div id="chat"></div>
+      <div id="typingIndicator"></div>
+    </div>
+  </div>
+
+  <div id="replyBox"></div>
+  <div id="inputBar">
+    <button id="emojiBtn">😊</button>
+    <input id="msg" placeholder="Message... (/clear /delete)">
+    <div id="emojiPicker"></div>
+  </div>
 </div>
 
-<div id="chatWrapper">
-<div id="chatSidebar"></div>
-<div id="chatWrapperMain">
-<div id="chat"></div>
-</div>
 </div>
 
-<div id="inputBar">
-<input id="msg" placeholder="Message...">
-</div>
-</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection,
+  addDoc, getDocs, query, orderBy,
+  onSnapshot, serverTimestamp, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-</div>
-
-<script>
-const login = document.getElementById("login");
-const home = document.getElementById("home");
-const main = document.getElementById("main");
-
-const loginBtn = document.getElementById("loginBtn");
-const loginNick = document.getElementById("loginNick");
-
-const roomList = document.getElementById("roomList");
-const createRoomBtn = document.getElementById("createRoom");
-
-const chat = document.getElementById("chat");
-const msgInput = document.getElementById("msg");
-const roomNameEl = document.getElementById("roomName");
-const backBtn = document.getElementById("back");
-
-let user = "";
-let currentRoom = "";
-
-const getRooms = () =>
-  JSON.parse(localStorage.getItem("rooms") || "[]");
-
-const saveRooms = r =>
-  localStorage.setItem("rooms", JSON.stringify(r));
-
-loginBtn.onclick = () => {
-  if (!loginNick.value.trim()) return;
-  user = loginNick.value.trim();
-  login.style.display = "none";
-  home.style.display = "flex";      /* ← VARMA */
-  renderRooms();
-};
-
-function renderRooms() {
-  roomList.innerHTML = "";
-  getRooms().forEach(room => {
-    const div = document.createElement("div");
-    div.className = "room";
-    div.textContent = room;
-    div.onclick = () => enterRoom(room);
-    roomList.appendChild(div);
-  });
-}
-
-createRoomBtn.onclick = () => {
-  const name = prompt("Room name?");
-  if (!name) return;
-  const rooms = getRooms();
-  if (!rooms.includes(name)) {
-    rooms.push(name);
-    saveRooms(rooms);
-  }
-  renderRooms();
-};
-
-function enterRoom(room) {
-  currentRoom = room;
-  roomNameEl.textContent = room;
-  home.style.display = "none";
-  main.style.display = "flex";      /* ← TÄRKEÄ */
-  loadMessages();
-}
-
-backBtn.onclick = () => {
-  main.style.display = "none";
-  home.style.display = "flex";
-};
-
-function loadMessages() {
-  chat.innerHTML = "";
-  const msgs = JSON.parse(
-    localStorage.getItem("chat_" + currentRoom) || "[]"
-  );
-  msgs.forEach(m => {
-    const div = document.createElement("div");
-    div.textContent = m.user + ": " + m.text;
-    chat.appendChild(div);
-  });
-}
-
-msgInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && msgInput.value.trim()) {
-    const key = "chat_" + currentRoom;
-    const msgs = JSON.parse(localStorage.getItem(key) || "[]");
-    msgs.push({ user, text: msgInput.value });
-    localStorage.setItem(key, JSON.stringify(msgs));
-    msgInput.value = "";
-    loadMessages();
-  }
+const app = initializeApp({
+  apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
+  projectId:"chat-fc8ef"
 });
+const db = getFirestore(app);
+
+/* DOM */
+const chat=document.getElementById("chat");
+const msg=document.getElementById("msg");
+const roomList=document.getElementById("roomList");
+const replyBox=document.getElementById("replyBox");
+const roomName=document.getElementById("roomName");
+const emojiPicker=document.getElementById("emojiPicker");
+const emojiBtn=document.getElementById("emojiBtn");
+const typingIndicator=document.getElementById("typingIndicator");
+const nickInput=document.getElementById("nick");
+const nickColorInput=document.getElementById("nickColor");
+
+let room="", nick="", nickColor="#58a6ff", replyTo=null;
+let lastMessageTime=0;
+
+/* notification permission */
+if(Notification.permission!=="granted"){
+  Notification.requestPermission();
+}
+
+/* load nick */
+nickInput.value=localStorage.getItem("nick")||"";
+nickColorInput.value=localStorage.getItem("nickColor")||"#58a6ff";
+nickColorInput.oninput=()=>localStorage.setItem("nickColor",nickColorInput.value);
+
+/* rooms */
+async function loadRooms(){
+  roomList.innerHTML="";
+  const s=await getDocs(collection(db,"rooms"));
+  s.forEach(r=>{
+    const d=document.createElement("div");
+    d.className="room";
+    d.textContent="# "+r.id;
+    d.onclick=()=>joinRoom(r.id);
+    roomList.appendChild(d);
+  });
+}
+
+/* create / join */
+createRoom.onclick=async()=>{
+  const r=prompt("Room name"); if(!r)return;
+  const p=prompt("Password (optional)");
+  const ref=doc(db,"rooms",r);
+  if(!(await getDoc(ref)).exists())
+    await setDoc(ref,{password:p||"",created:serverTimestamp()});
+  joinRoom(r);
+};
+
+async function joinRoom(r){
+  const ref=doc(db,"rooms",r);
+  const snap=await getDoc(ref);
+  if(!snap.exists())return alert("Room doesn't exist");
+  const pass=prompt("Password");
+  if(pass!==snap.data().password)return alert("Wrong password");
+
+  nick=nickInput.value||("Anon"+Math.floor(Math.random()*1000));
+  nickColor=nickColorInput.value;
+  localStorage.setItem("nick",nick);
+  localStorage.setItem("nickColor",nickColor);
+
+  home.style.display="none";
+  main.style.display="flex";
+  room=r;
+  roomName.textContent="# "+r;
+
+  /* messages */
+  onSnapshot(query(collection(db,"rooms",room,"messages"),orderBy("time")),snap=>{
+    chat.innerHTML="";
+    snap.forEach(d=>{
+      const m=d.data();
+      const t=m.time?.toMillis()||0;
+
+      if(
+        t>lastMessageTime &&
+        document.hidden &&
+        m.name!==nick
+      ){
+        new Notification("New message.");
+      }
+      lastMessageTime=Math.max(lastMessageTime,t);
+
+      const el=document.createElement("div");
+      el.className="message";
+      el.innerHTML=`
+        <div class="avatar" style="background:${m.color}">${m.name[0]}</div>
+        <div class="msg">
+          ${m.reply?`<div class="reply-preview"><b>${m.reply.name}</b>: ${m.reply.text}</div>`:""}
+          <b style="color:${m.color}">${m.name}</b>
+          <span class="time">${t?new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):""}</span>
+          <div>${m.text}</div>
+          <div class="reply-btn" data-name="${m.name}" data-text="${m.text}">reply</div>
+        </div>`;
+      chat.appendChild(el);
+    });
+    chat.scrollTop=chat.scrollHeight;
+  });
+
+  /* typing listener */
+  onSnapshot(collection(db,"rooms",room,"typing"),s=>{
+    const users=[];
+    s.forEach(d=>{
+      if(d.id!==nick) users.push(d.id);
+    });
+    typingIndicator.textContent=
+      users.length ? users.join(", ")+" typing..." : "";
+  });
+}
+
+/* typing write */
+let typingTimeout;
+msg.addEventListener("input",()=>{
+  if(!room||!nick) return;
+  setDoc(doc(db,"rooms",room,"typing",nick),{t:Date.now()});
+  clearTimeout(typingTimeout);
+  typingTimeout=setTimeout(()=>{
+    deleteDoc(doc(db,"rooms",room,"typing",nick));
+  },1500);
+});
+
+/* reply */
+chat.onclick=e=>{
+  const b=e.target.closest(".reply-btn");
+  if(!b)return;
+  replyTo={name:b.dataset.name,text:b.dataset.text};
+  replyBox.style.display="block";
+  replyBox.innerHTML=`Replying to <span>${replyTo.name}</span>
+    <button onclick="cancelReply()">x</button>`;
+};
+window.cancelReply=()=>{
+  replyTo=null;
+  replyBox.style.display="none";
+};
+
+/* send */
+msg.addEventListener("keydown",async e=>{
+  if(e.key!=="Enter")return;
+  const text=msg.value.trim();
+  msg.value="";
+  if(!text)return;
+
+  if(text==="/clear"){
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
+    for(const d of msgs.docs)await deleteDoc(d.ref);
+    return;
+  }
+
+  if(text==="/delete"){
+    if(!confirm("Delete entire room?"))return;
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
+    for(const d of msgs.docs)await deleteDoc(d.ref);
+    await deleteDoc(doc(db,"rooms",room));
+    location.reload();
+    return;
+  }
+
+  await addDoc(collection(db,"rooms",room,"messages"),{
+    name:nick,text,reply:replyTo,color:nickColor,time:serverTimestamp()
+  });
+
+  replyTo=null;
+  replyBox.style.display="none";
+});
+
+/* emojis */
+[
+  "😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
+  "😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
+  "👍","❤️","🔥","💯","🎉","😎"
+].forEach(e=>{
+  const d=document.createElement("div");
+  d.textContent=e;
+  d.onclick=()=>msg.value+=e;
+  emojiPicker.appendChild(d);
+});
+
+emojiBtn.onclick=()=>emojiPicker.style.display=
+  emojiPicker.style.display==="flex"?"none":"flex";
+msg.onfocus=()=>emojiPicker.style.display="none";
+
+back.onclick=()=>location.reload();
+loadRooms();
 </script>
 </body>
-</html>
+</html>s
