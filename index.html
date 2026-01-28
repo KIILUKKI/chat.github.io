@@ -6,13 +6,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
-#app{width:100%;height:100%;position:relative}
+body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3;display:flex;flex-direction:column}
 
 /* === LOGIN === */
 #login{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;
+  flex:1;display:flex;flex-direction:column;
   justify-content:center;align-items:center;
   gap:10px;background:#0b0f14;z-index:10
 }
@@ -27,8 +25,9 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 
 /* HOME */
 #home{
-  position:absolute;inset:0;display:none;
-  background:#0b0f14;flex-direction:row;
+  display:none;flex:1;flex-direction:row;
+  background:#0b0f14;
+  overflow:hidden;
 }
 #logoutBtn{
   position:absolute;top:14px;right:14px;
@@ -36,23 +35,38 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   border:none;border-radius:8px;cursor:pointer;font-weight:600;
   z-index:5;
 }
+
+/* collapsible sidebar */
 #homeLeft{
   width:260px;height:100%;
   background:#161b22;padding:14px;
-  overflow-y:auto;border-right:1px solid #0d1117
+  overflow-y:auto;border-right:1px solid #0d1117;
+  transition: width 0.2s;
+  position:relative;
 }
-#homeLeft h2{margin:0 0 14px}
+#homeLeft.minimized{width:40px;padding:14px 4px;}
+#homeLeft h2{margin:0 0 14px;font-size:16px}
 .room{
   padding:10px 12px;border-radius:8px;
   background:#21262d;margin-bottom:8px;
-  cursor:pointer
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .room:hover{background:#58a6ff;color:#000}
+
+/* toggle buttons */
+.toggleBtn{
+  position:absolute;top:14px;right:-20px;
+  width:20px;height:40px;background:#58a6ff;color:#000;
+  border:none;border-radius:4px;cursor:pointer;font-weight:600;
+  display:flex;align-items:center;justify-content:center;z-index:10;
+}
+
+/* center */
 #homeCenter{
   flex:1;display:flex;flex-direction:column;
-  justify-content:center;align-items:center;position:relative;
+  justify-content:center;align-items:center;position:relative;padding:14px;
 }
-#nickRow{display:flex;gap:12px;width:320px;margin-bottom:20px;align-items:center}
+#nickRow{display:flex;gap:12px;width:100%;max-width:320px;margin-bottom:20px;align-items:center}
 #nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
 
 /* Custom color picker */
@@ -84,7 +98,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 }
 
 /* MAIN */
-#main{display:none;height:100%;flex-direction:column}
+#main{display:none;flex:1;flex-direction:column}
 #header{
   height:52px;background:#161b22;
   display:flex;align-items:center;
@@ -94,8 +108,12 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   background:none;border:none;color:#fff;
   font-size:18px;cursor:pointer;margin-right:10px
 }
-#chatWrapper{display:flex;flex:1;overflow:hidden}
-#chatSidebar{width:260px;background:#161b22;border-right:1px solid #0d1117}
+#chatWrapper{display:flex;flex:1;overflow:hidden;transition:all 0.2s}
+#chatSidebar{
+  width:260px;background:#161b22;border-right:1px solid #0d1117;
+  position:relative;transition:width 0.2s;
+}
+#chatSidebar.minimized{width:40px;}
 #chatWrapperMain{flex:1;display:flex;flex-direction:column}
 #chat{
   flex:1;padding:16px;overflow-y:auto;
@@ -152,10 +170,12 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 @media (max-width:768px){
   #home{flex-direction:column;}
   #homeLeft{width:100%;height:auto;border-right:none;border-bottom:1px solid #0d1117;}
+  #homeLeft.minimized{width:100%;height:0;padding:0;margin:0;overflow:hidden;}
   #homeCenter{width:100%;padding:14px;}
   
   #chatWrapper{flex-direction:column;}
   #chatSidebar{width:100%;height:120px;border-right:none;border-bottom:1px solid #0d1117;}
+  #chatSidebar.minimized{height:40px;}
   #chatWrapperMain{flex:1;}
   #chat{padding:8px;}
   
@@ -180,6 +200,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 <div id="home">
   <button id="logoutBtn">Logout</button>
   <div id="homeLeft">
+    <button class="toggleBtn" id="toggleHomeLeft">◀</button>
     <h2>Rooms</h2>
     <div id="roomList"></div>
   </div>
@@ -203,7 +224,9 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   </div>
 
   <div id="chatWrapper">
-    <div id="chatSidebar"></div>
+    <div id="chatSidebar">
+      <button class="toggleBtn" id="toggleChatSidebar">◀</button>
+    </div>
     <div id="chatWrapperMain">
       <div id="chat"></div>
       <div id="typingIndicator"></div>
@@ -259,9 +282,25 @@ loginBtn.onclick=()=> {
 };
 
 logoutBtn.onclick=()=>showLogin();
+
+// === COLLAPSIBLE SIDEBARS ===
+const homeLeft=document.getElementById("homeLeft");
+const toggleHomeLeft=document.getElementById("toggleHomeLeft");
+toggleHomeLeft.onclick=()=> {
+  homeLeft.classList.toggle("minimized");
+  toggleHomeLeft.textContent = homeLeft.classList.contains("minimized")?"▶":"◀";
+};
+
+const chatSidebar=document.getElementById("chatSidebar");
+const toggleChatSidebar=document.getElementById("toggleChatSidebar");
+toggleChatSidebar.onclick=()=> {
+  chatSidebar.classList.toggle("minimized");
+  toggleChatSidebar.textContent = chatSidebar.classList.contains("minimized")?"▶":"◀";
+};
 </script>
 
 <script type="module">
+// === FIREBASE + CHAT SCRIPT ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection,
@@ -433,30 +472,17 @@ msg.addEventListener("keydown",async e=>{
   replyTo=null; replyBox.style.display="none";
 });
 
-/* emojis */
-[
-"😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
-"😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
-"🤗","🤭","🤫","🤔","🤨","😐","😑","😶","🙄","😏",
-"😣","😥","😮","😯","😲","😪","😫","🥱","😴","😌",
-"😤","😠","😡","🤬","😢","😭","🥺","😳","😱","😨","😰","😓",
-"👍","👎","👌","🤌","✌️","🤞","🤟","🤘","🤙","👋","👏","🙌","🙏",
-"❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💕","💞","💓","💗","💖",
-"🔥","💯","✨","⭐","🌟","⚡","🎉","🎊","🎈","🎶","🎵",
-"😎","🤓","🧐","👀","🧠","🤡","👻","👽","🤖","💀","💩","🫶"
-].forEach(e=>{
-  const d=document.createElement("div");
-  d.textContent=e;
-  d.onclick=()=>msg.value+=e;
-  emojiPicker.appendChild(d);
-});
+/* back button */
+back.onclick=()=>{ main.style.display="none"; home.style.display="flex"; loadRooms(); };
 
-emojiBtn.onclick=()=>emojiPicker.style.display=
-  emojiPicker.style.display==="flex"?"none":"flex";
-msg.onfocus=()=>emojiPicker.style.display="none";
+/* emoji */
+const emojis=["😀","😅","😂","😎","😡","👍","👎","❤️","🎉"];
+emojiBtn.onclick=()=>emojiPicker.style.display=emojiPicker.style.display==="flex"?"none":"flex";
+emojiPicker.innerHTML="";
+emojis.forEach(e=>{const d=document.createElement("div"); d.textContent=e; d.onclick=()=>{ msg.value+=e; }; emojiPicker.appendChild(d); });
 
-back.onclick=()=>location.reload();
 loadRooms();
 </script>
+
 </body>
 </html>
