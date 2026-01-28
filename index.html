@@ -1,3 +1,5 @@
+lisää login
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,27 +135,6 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 
 <!-- HOME -->
 <div id="home">
-  <div id="home">
-  <button id="logout" style="
-    position:absolute; top:14px; right:14px;
-    padding:10px 14px; border:none; border-radius:8px;
-    background:#ff5858; color:#000; cursor:pointer;
-    font-weight:600;
-  ">Logout</button>
-
-  <div id="homeLeft">
-    <h2>Rooms</h2>
-    <div id="roomList"></div>
-  </div>
-  <div id="homeCenter">
-    <div id="nickRow">
-      <input id="nick" placeholder="Username">
-      <input type="color" id="nickColor" value="#58a6ff">
-    </div>
-    <button id="createRoom">Create / Join Room</button>
-  </div>
-</div>
-
   <div id="homeLeft">
     <h2>Rooms</h2>
     <div id="roomList"></div>
@@ -221,16 +202,6 @@ loginBtn.onclick=()=>{
 
   document.getElementById("nick").value=u;
   showHome();
-const logoutBtn = document.getElementById("logout");
-
-logoutBtn.onclick = () => {
-  localStorage.removeItem("session"); // poistaa kirjautumisen
-  loginUser.value = ""; 
-  loginPass.value = "";
-  login.style.display = "flex";
-  home.style.display = "none";
-};
-
 };
 </script>
 
