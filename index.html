@@ -14,7 +14,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 #login input{padding:12px;margin:6px;border-radius:8px;border:none;background:#21262d;color:#fff;width:200px}
 #login button{padding:12px 24px;margin-top:12px;border:none;border-radius:10px;background:#58a6ff;color:#000;font-weight:600;cursor:pointer}
 
-/* LOBBY / HOME */
+/* LOBBY */
 #home{display:none;flex:1;flex-direction:column;position:relative}
 #homeTop{display:flex;align-items:center;gap:12px;padding:14px}
 #nickDisplay{flex:1;padding:10px;border-radius:8px;background:#21262d;color:#fff;display:flex;align-items:center;justify-content:space-between}
@@ -26,7 +26,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 .room{padding:10px 12px;border-radius:8px;background:#21262d;margin-bottom:8px;cursor:pointer}
 .room:hover{background:#58a6ff;color:#000}
 
-/* CHAT MAIN */
+/* CHAT */
 #main{display:none;height:100%;flex-direction:column}
 #header{height:52px;background:#161b22;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid #0d1117}
 #header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;margin-right:10px}
@@ -35,7 +35,6 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 #chatWrapperMain{flex:1;display:flex;flex-direction:column}
 #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
 
-/* messages */
 .message{display:flex;gap:10px}
 .avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#000}
 .msg{background:#161b22;padding:10px 14px;border-radius:10px;width:100%;position:relative}
@@ -59,17 +58,16 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 #typingIndicator{font-size:12px;color:#8b949e;margin-left:16px}
 </style>
 </head>
+
 <body>
 <div id="app">
 
-<!-- LOGIN -->
 <div id="login">
   <input id="loginNick" placeholder="Username">
   <input id="loginPass" type="password" placeholder="Password">
   <button id="loginBtn">Login / Register</button>
 </div>
 
-<!-- LOBBY -->
 <div id="home">
   <div id="homeTop">
     <div id="nickDisplay">
@@ -84,7 +82,6 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   </div>
 </div>
 
-<!-- CHAT -->
 <div id="main">
   <div id="header">
     <button id="back">←</button>
@@ -111,7 +108,11 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, doc, getDoc, setDoc, collection, addDoc,
+  getDocs, query, orderBy, onSnapshot,
+  serverTimestamp, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
@@ -140,81 +141,85 @@ const emojiPicker = document.getElementById("emojiPicker");
 const emojiBtn = document.getElementById("emojiBtn");
 const typingIndicator = document.getElementById("typingIndicator");
 
-let nick="", nickColor="#58a6ff", room="", replyTo=null, lastMessageTime=0, typingTimeout=null;
+let nick="", nickColor="#58a6ff", room="", replyTo=null, lastMessageTime=0;
 
 /* notifications */
 if(Notification.permission!=="granted") Notification.requestPermission();
 
 /* LOGIN */
 loginBtn.onclick = async ()=>{
-  const n = loginNick.value.trim();
-  const p = loginPass.value.trim();
-  if(!n||!p) return alert("Enter username and password");
+  try{
+    const n = loginNick.value.trim();
+    const p = loginPass.value.trim();
+    if(!n||!p) return alert("Enter username and password");
 
-  const uRef = doc(db,"users",n);
-  const snap = await getDoc(uRef);
-  if(snap.exists()){
-    if(snap.data().pass!==p) return alert("Wrong password");
-    nickColor = snap.data().color||"#58a6ff";
-  } else {
-    await setDoc(uRef,{pass:p,color:"#58a6ff"});
-    nickColor="#58a6ff";
+    const safeNick = n.replace(/[^a-zA-Z0-9_-]/g,"_");
+    const uRef = doc(db,"users",safeNick);
+    const snap = await getDoc(uRef);
+
+    if(snap.exists()){
+      if(snap.data().pass!==p) return alert("Wrong password");
+      nickColor = snap.data().color || "#58a6ff";
+    } else {
+      await setDoc(uRef,{pass:p,color:"#58a6ff"});
+      nickColor="#58a6ff";
+    }
+
+    nick = n;
+    loginDiv.style.display="none";
+    home.style.display="flex";
+    homeNick.textContent = nick;
+    nickColorInput.value = nickColor;
+
+    loadRooms();
+
+  }catch(err){
+    alert("Login error");
+    console.error(err);
   }
-
-  nick = n;
-  loginDiv.style.display="none";
-  home.style.display="flex";
-  homeNick.textContent = nick;
-  nickColorInput.value = nickColor;
-  localStorage.setItem("nick",nick);
-  localStorage.setItem("nickColor",nickColor);
-
-  loadRooms();
 };
 
-/* lobby color change */
-nickColorInput.oninput = ()=>{
+/* color change */
+nickColorInput.oninput = async ()=>{
   nickColor = nickColorInput.value;
-  localStorage.setItem("nickColor",nickColor);
+  if(nick){
+    const safeNick = nick.replace(/[^a-zA-Z0-9_-]/g,"_");
+    await setDoc(doc(db,"users",safeNick),{color:nickColor},{merge:true});
+  }
 };
 
-/* load rooms */
+/* rooms */
 async function loadRooms(){
   roomList.innerHTML="";
   const s = await getDocs(collection(db,"rooms"));
   s.forEach(r=>{
-    const d = document.createElement("div");
-    d.className = "room";
-    d.textContent = "# "+r.id;
-    d.onclick = ()=>joinRoomPrompt(r.id);
+    const d=document.createElement("div");
+    d.className="room";
+    d.textContent="# "+r.id;
+    d.onclick=()=>joinRoomPrompt(r.id);
     roomList.appendChild(d);
   });
 }
 
-/* create/join room */
-createRoomBtn.onclick = async ()=>{
-  if(!nick) return alert("Login first!");
-  const r = prompt("Room name"); if(!r) return;
-  joinRoomPrompt(r);
+createRoomBtn.onclick=()=>{
+  const r=prompt("Room name");
+  if(r) joinRoomPrompt(r);
 };
 
-/* join room with password */
 async function joinRoomPrompt(r){
-  const ref = doc(db,"rooms",r);
-  const snap = await getDoc(ref);
+  const ref=doc(db,"rooms",r);
+  const snap=await getDoc(ref);
   if(snap.exists()){
-    const p = prompt("Password for "+r);
-    if(p!==snap.data().password) return alert("Wrong password");
+    if(prompt("Password")!==snap.data().password) return alert("Wrong password");
   } else {
-    const np = prompt("Set password for new room"); 
-    if(!np) return alert("Password required");
-    await setDoc(ref,{password:np,created:serverTimestamp()});
+    const p=prompt("Set password");
+    if(!p) return;
+    await setDoc(ref,{password:p,created:serverTimestamp()});
   }
   joinRoom(r);
 }
 
-/* join room */
-async function joinRoom(r){
+function joinRoom(r){
   room=r;
   home.style.display="none";
   main.style.display="flex";
@@ -222,11 +227,12 @@ async function joinRoom(r){
 
   onSnapshot(query(collection(db,"rooms",room,"messages"),orderBy("time")),snap=>{
     chat.innerHTML="";
-    const now = Date.now();
+    const now=Date.now();
     snap.forEach(d=>{
-      const m = d.data();
-      const t = m.time?.toMillis()||0;
-      if(t>lastMessageTime && document.hidden && m.name!==nick) new Notification("New message.");
+      const m=d.data();
+      const t=m.time?.toMillis()||0;
+      if(t>lastMessageTime && document.hidden && m.name!==nick)
+        new Notification("New message");
       lastMessageTime=Math.max(lastMessageTime,t);
 
       const el=document.createElement("div");
@@ -246,11 +252,10 @@ async function joinRoom(r){
   });
 
   onSnapshot(collection(db,"rooms",room,"typing"),snap=>{
-    const now = Date.now();
-    const users = [];
+    const users=[];
+    const now=Date.now();
     snap.forEach(d=>{
-      if(d.id===nick) return;
-      if(d.data().t && now-d.data().t<2000) users.push(d.id);
+      if(d.id!==nick && now-d.data().t<2000) users.push(d.id);
     });
     typingIndicator.textContent = users.length?users.join(", ")+" typing...":"";
   });
@@ -259,40 +264,43 @@ async function joinRoom(r){
 /* typing */
 msg.addEventListener("input",()=>{
   if(!room||!nick) return;
-  if(msg.value.trim()===""){ deleteDoc(doc(db,"rooms",room,"typing",nick)); return; }
+  if(msg.value.trim()===""){
+    deleteDoc(doc(db,"rooms",room,"typing",nick));
+    return;
+  }
   setDoc(doc(db,"rooms",room,"typing",nick),{t:Date.now()});
-  clearTimeout(typingTimeout);
-  typingTimeout=setTimeout(()=>deleteDoc(doc(db,"rooms",room,"typing",nick)),2000);
+  setTimeout(()=>deleteDoc(doc(db,"rooms",room,"typing",nick)),2000);
 });
-msg.addEventListener("blur",()=>{if(room&&nick) deleteDoc(doc(db,"rooms",room,"typing",nick));});
 
 /* reply */
-chat.onclick = e=>{
-  const b = e.target.closest(".reply-btn");
+chat.onclick=e=>{
+  const b=e.target.closest(".reply-btn");
   if(!b) return;
   replyTo={name:b.dataset.name,text:b.dataset.text};
   replyBox.style.display="block";
-  replyBox.innerHTML=`Replying to <span>${replyTo.name}</span><button onclick="cancelReply()">x</button>`;
+  replyBox.innerHTML=`Replying to <span>${replyTo.name}</span>
+    <button onclick="cancelReply()">x</button>`;
 };
-window.cancelReply = ()=>{replyTo=null; replyBox.style.display="none";};
+window.cancelReply=()=>{
+  replyTo=null;
+  replyBox.style.display="none";
+};
 
-/* send messages */
-msg.addEventListener("keydown", async e=>{
+/* send */
+msg.addEventListener("keydown",async e=>{
   if(e.key!=="Enter") return;
-  const text = msg.value.trim();
+  const text=msg.value.trim();
   msg.value="";
   if(!text) return;
-  if(!room){ alert("Join a room first!"); return; }
-  deleteDoc(doc(db,"rooms",room,"typing",nick));
 
   if(text==="/clear"){
-    const msgs = await getDocs(collection(db,"rooms",room,"messages"));
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
     for(const d of msgs.docs) await deleteDoc(d.ref);
     return;
   }
   if(text==="/delete"){
     if(!confirm("Delete entire room?")) return;
-    const msgs = await getDocs(collection(db,"rooms",room,"messages"));
+    const msgs=await getDocs(collection(db,"rooms",room,"messages"));
     for(const d of msgs.docs) await deleteDoc(d.ref);
     await deleteDoc(doc(db,"rooms",room));
     location.reload();
@@ -306,18 +314,16 @@ msg.addEventListener("keydown", async e=>{
   replyBox.style.display="none";
 });
 
-/* emojis */
-[
-  "😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
-  "😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝"
-].forEach(e=>{
+/* emoji */
+["😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😍","🥰","😘","😜","🤪"]
+.forEach(e=>{
   const d=document.createElement("div");
   d.textContent=e;
   d.onclick=()=>msg.value+=e;
   emojiPicker.appendChild(d);
 });
-emojiBtn.onclick=()=>emojiPicker.style.display=emojiPicker.style.display==="flex"?"none":"flex";
-msg.onfocus=()=>emojiPicker.style.display="none";
+emojiBtn.onclick=()=>emojiPicker.style.display=
+  emojiPicker.style.display==="flex"?"none":"flex";
 
 document.getElementById("back").onclick=()=>location.reload();
 </script>
