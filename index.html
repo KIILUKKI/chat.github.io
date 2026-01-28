@@ -9,7 +9,7 @@
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
 #app{width:100%;height:100%;position:relative}
 
-/* === LOGIN ADD === */
+/* === LOGIN === */
 #login{
   position:absolute;inset:0;
   display:flex;flex-direction:column;
@@ -54,12 +54,29 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 }
 #nickRow{display:flex;gap:12px;width:320px;margin-bottom:20px;align-items:center}
 #nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
-#nickColor{
-  width:42px;height:42px;border-radius:50%;
-  border:none;
-  cursor:pointer;
-  padding:0;
+
+/* Custom color picker */
+#nickColorWrapper {
+  position: relative;
+  width: 42px;
+  height: 42px;
 }
+#nickColorCircle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #58a6ff;
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+#nickColor {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 #createRoom{
   padding:14px 28px;border-radius:12px;
   background:#58a6ff;color:#000;
@@ -153,7 +170,10 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   <div id="homeCenter">
     <div id="nickRow">
       <input id="nick" placeholder="Username">
-      <input type="color" id="nickColor" value="#58a6ff">
+      <div id="nickColorWrapper">
+        <div id="nickColorCircle"></div>
+        <input type="color" id="nickColor" value="#58a6ff">
+      </div>
     </div>
     <button id="createRoom">Create / Join Room</button>
   </div>
@@ -225,7 +245,6 @@ loginBtn.onclick=()=>{
 logoutBtn.onclick=()=>showLogin();
 </script>
 
-<!-- === FIREBASE SCRIPT === -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -250,6 +269,7 @@ const emojiBtn=document.getElementById("emojiBtn");
 const typingIndicator=document.getElementById("typingIndicator");
 const nickInput=document.getElementById("nick");
 const nickColorInput=document.getElementById("nickColor");
+const nickColorCircle=document.getElementById("nickColorCircle");
 const createRoom=document.getElementById("createRoom");
 const main=document.getElementById("main");
 const back=document.getElementById("back");
@@ -261,8 +281,14 @@ let typingTimeout=null;
 if(Notification.permission!=="granted") Notification.requestPermission();
 
 nickInput.value=localStorage.getItem("nick")||"";
-nickColorInput.value=localStorage.getItem("nickColor")||"#58a6ff";
-nickColorInput.oninput=()=>localStorage.setItem("nickColor",nickColorInput.value);
+nickColor = localStorage.getItem("nickColor")||"#58a6ff";
+nickColorInput.value = nickColor;
+nickColorCircle.style.background = nickColor;
+
+nickColorInput.oninput = () => {
+  nickColorCircle.style.background = nickColorInput.value;
+  localStorage.setItem("nickColor", nickColorInput.value);
+};
 
 /* rooms */
 async function loadRooms(){
