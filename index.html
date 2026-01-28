@@ -10,8 +10,28 @@
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
 #app{width:100%;height:100%;position:relative}
 
+/* LOGIN */
+#login{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:16px
+}
+#login input{
+  width:260px;padding:14px;
+  border-radius:10px;border:none;
+  background:#21262d;color:#fff
+}
+#login button{
+  padding:14px 28px;border-radius:12px;
+  background:#58a6ff;color:#000;
+  border:none;font-weight:600;cursor:pointer
+}
+
 /* HOME */
-#home{position:absolute;inset:0;display:flex;background:#0b0f14}
+#home{position:absolute;inset:0;display:none;background:#0b0f14}
 #homeLeft{
   width:260px;height:100%;
   background:#161b22;padding:14px;
@@ -30,15 +50,7 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 }
 #nickRow{display:flex;gap:12px;width:320px;margin-bottom:20px}
 #nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
-
-/* ⬇️ MUUTETTU: neliön muotoinen color picker */
-#nickColor{
-  width:42px;
-  height:42px;
-  border-radius:0;
-  border:none
-}
-
+#nickColor{width:42px;height:42px;border-radius:0;border:none}
 #createRoom{
   padding:14px 28px;border-radius:12px;
   background:#58a6ff;color:#000;
@@ -116,6 +128,14 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 <body>
 <div id="app">
 
+<!-- LOGIN -->
+<div id="login">
+  <h2>Login</h2>
+  <input id="loginNick" placeholder="Username">
+  <button id="loginBtn">Login</button>
+</div>
+
+<!-- HOME -->
 <div id="home">
   <div id="homeLeft">
     <h2>Rooms</h2>
@@ -123,13 +143,14 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
   </div>
   <div id="homeCenter">
     <div id="nickRow">
-      <input id="nick" placeholder="Username">
+      <input id="nick" disabled>
       <input type="color" id="nickColor" value="#58a6ff">
     </div>
     <button id="createRoom">Create / Join Room</button>
   </div>
 </div>
 
+<!-- MAIN -->
 <div id="main">
   <div id="header">
     <button id="back">←</button>
@@ -169,6 +190,11 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 /* DOM */
+const login=document.getElementById("login");
+const loginNick=document.getElementById("loginNick");
+const loginBtn=document.getElementById("loginBtn");
+const home=document.getElementById("home");
+const main=document.getElementById("main");
 const chat=document.getElementById("chat");
 const msg=document.getElementById("msg");
 const roomList=document.getElementById("roomList");
@@ -180,20 +206,33 @@ const typingIndicator=document.getElementById("typingIndicator");
 const nickInput=document.getElementById("nick");
 const nickColorInput=document.getElementById("nickColor");
 
-let room="", nick="", nickColor="#58a6ff", replyTo=null;
+let room="", nick="", replyTo=null;
 let lastMessageTime=0;
 
-/* notification permission */
-if(Notification.permission!=="granted"){
-  Notification.requestPermission();
+/* LOGIN */
+const savedNick=localStorage.getItem("nick");
+if(savedNick){
+  nick=savedNick;
+  nickInput.value=nick;
+  login.style.display="none";
+  home.style.display="flex";
+  loadRooms();
+}else{
+  login.style.display="flex";
 }
 
-/* load nick */
-nickInput.value=localStorage.getItem("nick")||"";
-nickColorInput.value=localStorage.getItem("nickColor")||"#58a6ff";
-nickColorInput.oninput=()=>localStorage.setItem("nickColor",nickColorInput.value);
+loginBtn.onclick=()=>{
+  const n=loginNick.value.trim();
+  if(!n)return alert("Enter username");
+  localStorage.setItem("nick",n);
+  nick=n;
+  nickInput.value=n;
+  login.style.display="none";
+  home.style.display="flex";
+  loadRooms();
+};
 
-/* rooms */
+/* ROOMS */
 async function loadRooms(){
   roomList.innerHTML="";
   const s=await getDocs(collection(db,"rooms"));
@@ -206,7 +245,7 @@ async function loadRooms(){
   });
 }
 
-/* create / join */
+/* CREATE / JOIN */
 createRoom.onclick=async()=>{
   const r=prompt("Room name"); if(!r)return;
   const p=prompt("Password (optional)");
@@ -222,11 +261,6 @@ async function joinRoom(r){
   if(!snap.exists())return alert("Room doesn't exist");
   const pass=prompt("Password");
   if(pass!==snap.data().password)return alert("Wrong password");
-
-  nick=nickInput.value||("Anon"+Math.floor(Math.random()*1000));
-  nickColor=nickColorInput.value;
-  localStorage.setItem("nick",nick);
-  localStorage.setItem("nickColor",nickColor);
 
   home.style.display="none";
   main.style.display="flex";
@@ -267,10 +301,10 @@ async function joinRoom(r){
   });
 }
 
-/* typing write */
+/* TYPING */
 let typingTimeout;
 msg.addEventListener("input",()=>{
-  if(!room||!nick) return;
+  if(!room||!nick)return;
   setDoc(doc(db,"rooms",room,"typing",nick),{t:Date.now()});
   clearTimeout(typingTimeout);
   typingTimeout=setTimeout(()=>{
@@ -278,7 +312,7 @@ msg.addEventListener("input",()=>{
   },1500);
 });
 
-/* reply */
+/* REPLY */
 chat.onclick=e=>{
   const b=e.target.closest(".reply-btn");
   if(!b)return;
@@ -292,7 +326,7 @@ window.cancelReply=()=>{
   replyBox.style.display="none";
 };
 
-/* send */
+/* SEND */
 msg.addEventListener("keydown",async e=>{
   if(e.key!=="Enter")return;
   const text=msg.value.trim();
@@ -315,14 +349,18 @@ msg.addEventListener("keydown",async e=>{
   }
 
   await addDoc(collection(db,"rooms",room,"messages"),{
-    name:nick,text,reply:replyTo,color:nickColor,time:serverTimestamp()
+    name:nick,
+    text,
+    reply:replyTo,
+    color:nickColorInput.value,
+    time:serverTimestamp()
   });
 
   replyTo=null;
   replyBox.style.display="none";
 });
 
-/* emojis */
+/* EMOJIS */
 [
   "😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
   "😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
@@ -334,12 +372,13 @@ msg.addEventListener("keydown",async e=>{
   emojiPicker.appendChild(d);
 });
 
-emojiBtn.onclick=()=>emojiPicker.style.display=
-  emojiPicker.style.display==="flex"?"none":"flex";
+emojiBtn.onclick=()=>{
+  emojiPicker.style.display=
+    emojiPicker.style.display==="flex"?"none":"flex";
+};
 msg.onfocus=()=>emojiPicker.style.display="none";
 
 back.onclick=()=>location.reload();
-loadRooms();
 </script>
 </body>
 </html>
