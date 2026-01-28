@@ -9,18 +9,23 @@
 body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color:#e6edf3}
 #app{width:100%;height:100%;position:relative}
 
+/* LOGIN */
+#loginTab{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#0b0f14}
+#loginTab input{padding:12px;border-radius:10px;border:none;margin:6px;width:240px;background:#21262d;color:#fff}
+#loginTab button{padding:12px 24px;border-radius:10px;border:none;background:#58a6ff;color:#000;font-weight:600;cursor:pointer;margin-top:10px}
+#loginTab h2{margin-bottom:20px}
+
 /* HOME */
-#home{position:absolute;inset:0;display:flex;background:#0b0f14}
-#homeLeft{width:260px;height:100%;background:#161b22;padding:14px;overflow-y:auto;border-right:1px solid #0d1117}
-#homeLeft h2{margin:0 0 14px}
+#home{display:none;height:100%;flex-direction:column;background:#0b0f14}
+#homeTop{padding:12px;display:flex;align-items:center;gap:12px}
+#nickDisplay{padding:6px 12px;background:#21262d;border-radius:8px}
+#nickColor{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer}
+#createRoom{padding:10px 20px;border-radius:10px;background:#58a6ff;color:#000;border:none;font-weight:600;cursor:pointer;margin-left:auto}
+
+/* rooms list */
+#homeLeft{width:260px;height:calc(100% - 52px);background:#161b22;padding:14px;overflow-y:auto;border-right:1px solid #0d1117;float:left}
 .room{padding:10px 12px;border-radius:8px;background:#21262d;margin-bottom:8px;cursor:pointer}
 .room:hover{background:#58a6ff;color:#000}
-#homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center}
-#nickRow{display:flex;gap:12px;width:360px;margin-bottom:20px}
-#nick{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
-#password{flex:1;padding:12px;border-radius:10px;border:none;background:#21262d;color:#fff}
-#nickColor{width:42px;height:42px;border-radius:50%;border:none}
-#createRoom{padding:14px 28px;border-radius:12px;background:#58a6ff;color:#000;border:none;font-weight:600;cursor:pointer}
 
 /* MAIN */
 #main{display:none;height:100%;flex-direction:column}
@@ -54,21 +59,29 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 <body>
 <div id="app">
 
+<!-- LOGIN TAB -->
+<div id="loginTab">
+  <h2>Login / Register</h2>
+  <input id="loginNick" placeholder="Username">
+  <input id="loginPassword" type="password" placeholder="Password">
+  <input type="color" id="loginColor" value="#58a6ff">
+  <button id="loginBtn">Login / Register</button>
+</div>
+
+<!-- HOME LOBBY -->
 <div id="home">
+  <div id="homeTop">
+    <div id="nickDisplay"></div>
+    <input type="color" id="nickColorDisplay">
+    <button id="createRoom" disabled>Create / Join Room</button>
+  </div>
   <div id="homeLeft">
     <h2>Rooms</h2>
     <div id="roomList"></div>
   </div>
-  <div id="homeCenter">
-    <div id="nickRow">
-      <input id="nick" placeholder="Username">
-      <input id="password" type="password" placeholder="Password">
-      <input type="color" id="nickColor" value="#58a6ff">
-    </div>
-    <button id="createRoom">Create / Join Room</button>
-  </div>
 </div>
 
+<!-- CHAT MAIN -->
 <div id="main">
   <div id="header">
     <button id="back">←</button>
@@ -93,31 +106,33 @@ body{margin:0;height:100vh;font-family:Inter,sans-serif;background:#0b0f14;color
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, doc, getDoc, setDoc, collection,
-  addDoc, getDocs, query, orderBy, onSnapshot,
-  serverTimestamp, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, onSnapshot, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* FIREBASE */
-const app = initializeApp({
-  apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc",
-  projectId:"chat-fc8ef"
-});
+const app = initializeApp({ apiKey:"AIzaSyDbYLUXJjHQ-V5uFvtyzwq-IwIKM7xTcyc", projectId:"chat-fc8ef" });
 const db = getFirestore(app);
 
 /* DOM */
+const loginTab=document.getElementById("loginTab");
+const loginNick=document.getElementById("loginNick");
+const loginPassword=document.getElementById("loginPassword");
+const loginColor=document.getElementById("loginColor");
+const loginBtn=document.getElementById("loginBtn");
+
+const home=document.getElementById("home");
+const nickDisplay=document.getElementById("nickDisplay");
+const nickColorDisplay=document.getElementById("nickColorDisplay");
+const createRoomBtn=document.getElementById("createRoom");
+const roomList=document.getElementById("roomList");
+
+const main=document.getElementById("main");
+const roomName=document.getElementById("roomName");
 const chat=document.getElementById("chat");
 const msg=document.getElementById("msg");
-const roomList=document.getElementById("roomList");
-const replyBox=document.getElementById("replyBox");
-const roomName=document.getElementById("roomName");
 const emojiPicker=document.getElementById("emojiPicker");
 const emojiBtn=document.getElementById("emojiBtn");
 const typingIndicator=document.getElementById("typingIndicator");
-const nickInput=document.getElementById("nick");
-const passwordInput=document.getElementById("password");
-const nickColorInput=document.getElementById("nickColor");
+const replyBox=document.getElementById("replyBox");
 
 let room="", nick="", nickColor="#58a6ff", replyTo=null;
 let lastMessageTime=0, typingTimeout=null;
@@ -125,33 +140,38 @@ let lastMessageTime=0, typingTimeout=null;
 /* notifications */
 if(Notification.permission!=="granted"){ Notification.requestPermission(); }
 
-/* local login */
+/* local users */
 function getUsers(){ return JSON.parse(localStorage.getItem("users")||"{}"); }
 function saveUsers(u){ localStorage.setItem("users",JSON.stringify(u)); }
-function login(){
-  const name = nickInput.value.trim();
-  const pass = passwordInput.value;
-  const color = nickColorInput.value;
-  if(!name || !pass){ alert("Username and password required"); return false; }
+
+/* LOGIN / REGISTER */
+loginBtn.onclick=()=>{
+  const name = loginNick.value.trim();
+  const pass = loginPassword.value;
+  const color = loginColor.value;
+  if(!name || !pass){ alert("Username and password required"); return; }
   const users = getUsers();
   if(users[name]){
-    if(users[name].password !== pass){ alert("Wrong password"); return false; }
+    if(users[name].password !== pass){ alert("Wrong password"); return; }
     nickColor = users[name].color;
-    nickColorInput.value = nickColor;
   } else {
     users[name] = { password: pass, color };
     saveUsers(users);
     nickColor = color;
   }
   nick = name;
-  localStorage.setItem("nick",nick);
-  localStorage.setItem("nickColor",nickColor);
-  return true;
-}
+  localStorage.setItem("nick", nick);
+  localStorage.setItem("nickColor", nickColor);
 
-/* load nick color if exists */
-nickInput.value=localStorage.getItem("nick")||"";
-nickColorInput.value=localStorage.getItem("nickColor")||"#58a6ff";
+  /* switch to home lobby */
+  loginTab.style.display="none";
+  home.style.display="flex";
+  nickDisplay.textContent = nick;
+  nickColorDisplay.value = nickColor;
+  createRoomBtn.disabled=false;
+  nickColorDisplay.oninput = ()=>{ nickColor = nickColorDisplay.value; localStorage.setItem("nickColor",nickColor); };
+  loadRooms();
+};
 
 /* rooms */
 async function loadRooms(){
@@ -166,9 +186,8 @@ async function loadRooms(){
   });
 }
 
-/* create/join room */
-createRoom.onclick=async()=>{
-  if(!login()) return;
+/* create/join */
+createRoomBtn.onclick=async()=>{
   const r=prompt("Room name"); if(!r) return;
   const p=prompt("Password (optional)");
   const ref=doc(db,"rooms",r);
@@ -180,14 +199,13 @@ createRoom.onclick=async()=>{
 async function joinRoom(r){
   const ref=doc(db,"rooms",r);
   const snap=await getDoc(ref);
-  if(!snap.exists()) return alert("Room doesn't exist");
+  if(!snap.exists()){ alert("Room doesn't exist"); return; }
   const pass=prompt("Password");
-  if(pass!==snap.data().password) return alert("Wrong password");
+  if(pass!==snap.data().password){ alert("Wrong password"); return; }
 
   home.style.display="none"; main.style.display="flex"; room=r;
   roomName.textContent="# "+r;
 
-  /* presence check: prevent same name */
   const presenceRef = doc(db,"rooms",room,"users",nick);
   if((await getDoc(presenceRef)).exists()){ alert("User already in room"); return; }
   await setDoc(presenceRef,{t:serverTimestamp()});
@@ -217,13 +235,13 @@ async function joinRoom(r){
     chat.scrollTop=chat.scrollHeight;
   });
 
-  /* typing listener */
+  /* typing */
   onSnapshot(collection(db,"rooms",room,"typing"),snap=>{
     const now = Date.now();
     const users=[];
     snap.forEach(d=>{
       if(d.id===nick) return;
-      if(d.data().t && now-d.data().t<2000){ users.push(d.id); }
+      if(d.data().t && now-d.data().t<2000) users.push(d.id);
     });
     typingIndicator.textContent = users.length ? users.join(", ")+" typing..." : "";
   });
@@ -256,7 +274,6 @@ msg.addEventListener("keydown",async e=>{
   const text=msg.value.trim(); msg.value="";
   deleteDoc(doc(db,"rooms",room,"typing",nick));
   if(!text) return;
-
   if(text==="/clear"){
     const msgs=await getDocs(collection(db,"rooms",room,"messages"));
     for(const d of msgs.docs) await deleteDoc(d.ref);
@@ -269,11 +286,7 @@ msg.addEventListener("keydown",async e=>{
     await deleteDoc(doc(db,"rooms",room));
     location.reload(); return;
   }
-
-  await addDoc(collection(db,"rooms",room,"messages"),{
-    name:nick,text,reply:replyTo,color:nickColor,time:serverTimestamp()
-  });
-
+  await addDoc(collection(db,"rooms",room,"messages"),{ name:nick,text,reply:replyTo,color:nickColor,time:serverTimestamp() });
   replyTo=null; replyBox.style.display="none";
 });
 
@@ -294,12 +307,11 @@ msg.addEventListener("keydown",async e=>{
   d.onclick=()=>msg.value+=e;
   emojiPicker.appendChild(d);
 });
-
 emojiBtn.onclick=()=>emojiPicker.style.display=emojiPicker.style.display==="flex"?"none":"flex";
 msg.onfocus=()=>emojiPicker.style.display="none";
 
-back.onclick=()=>location.reload();
-loadRooms();
+document.getElementById("back").onclick=()=>{ location.reload(); };
+
 </script>
 </body>
 </html>
