@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>MiniChat — Mobile-friendly</title>
+<title>MiniChat — Mobile-friendly (fast swipe)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -14,6 +14,8 @@
     --card:#21262d;
     --text:#e6edf3;
     --lobby-width:260px;
+    --drawer-duration: 140ms;
+    --drawer-ease: cubic-bezier(.16,.84,.24,1);
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
@@ -61,7 +63,7 @@
   #chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease;box-sizing:border-box;}
   #chatSidebar.collapsed{width:40px;padding:6px}
   #chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0}
-  #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 160ms ease}
+  #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
   .message{display:flex;gap:10px;align-items:flex-start}
   .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
   .msg{background:var(--panel);padding:10px 14px;border-radius:12px;position:relative;max-width:90%}
@@ -79,9 +81,9 @@
   #emojiBtn{border:none;background:transparent;color:var(--text);font-size:20px;cursor:pointer}
 
 /* mobile specifics */
-  .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background 220ms ease}
+  .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
   .mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
-  .mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform 220ms cubic-bezier(.2,.9,.3,1),opacity 200ms ease;opacity:0;will-change:transform}
+  .mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
   .mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
   #openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
 
@@ -141,7 +143,7 @@
       </div>
       <button id="createRoom">Luo / Liity huoneeseen</button>
       <div style="margin-top:16px;color:var(--muted);font-size:13px;text-align:center;max-width:420px">
-        Pyyhkäise reunasta avataksesi huonevalikon mobiilissa.
+        Pyyhkäise reunasta avataksesi huonevalikon mobiilissa (nopea ja smooth).
       </div>
     </main>
   </div>
@@ -198,9 +200,10 @@
 <script type="module">
 /* ===================
    App logic (single module)
-   - Drag feedback both directions for mobile drawer
-   - VisualViewport-based keyboard handling: keep chat visible above keyboard
-   - Desktop lobby enforced visible (unchanged behavior)
+   - Very short, super-smooth & fast swipe for mobile drawer
+   - Velocity-based flick decision (makes swipe feel snappy)
+   - Keyboard handling via visualViewport
+   - Desktop unchanged
    =================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -288,7 +291,6 @@ function enforceDesktopLobby(){
   if(!isMobile){
     lobby.style.display = 'block';
     chatSidebar.style.display = 'block';
-    // hide collapse buttons on desktop
     if(lobbyToggle) lobbyToggle.style.display = 'none';
     if(sidebarToggle) sidebarToggle.style.display = 'none';
   } else {
@@ -561,28 +563,32 @@ function applyLobbySize(){
   }
 }
 
-/* Mobile drawer open/close with smooth animation + drag feedback both directions */
+/* Mobile drawer open/close with very short, snappy animation + velocity flick */
 openLobbyBtn.addEventListener('click', openMobileDrawer);
 mobileOverlay.addEventListener('click', closeMobileDrawer);
 closeDrawer.addEventListener('click', closeMobileDrawer);
 
 function openMobileDrawer(){
+  // use fast CSS transition
   mobileOverlay.classList.add('show');
   mobileDrawer.classList.add('show');
-  mobileOverlay.style.display = 'block'; mobileDrawer.style.display = 'block';
+  mobileOverlay.style.display = 'block';
+  mobileDrawer.style.display = 'block';
   mobileOverlay.setAttribute('aria-hidden','false'); mobileDrawer.setAttribute('aria-hidden','false');
   updateOpenLobbyBtnVisibility();
 }
 function closeMobileDrawer(){
   mobileOverlay.classList.remove('show');
   mobileDrawer.classList.remove('show');
-  setTimeout(()=>{ 
+  // allow CSS to finish then hide
+  setTimeout(()=>{
     if(!mobileDrawer.classList.contains('show')){
-      mobileOverlay.style.display = 'none'; mobileDrawer.style.display = 'none';
+      mobileOverlay.style.display = 'none';
+      mobileDrawer.style.display = 'none';
       mobileOverlay.setAttribute('aria-hidden','true'); mobileDrawer.setAttribute('aria-hidden','true');
       updateOpenLobbyBtnVisibility();
     }
-  }, 260);
+  }, 180); // slightly above the CSS duration for safety
 }
 
 /* Visibility logic for the blue button */
@@ -607,121 +613,216 @@ showMain = function(){ origShowMain(); updateOpenLobbyBtnVisibility(); };
 const origShowLogin = showLogin;
 showLogin = function(){ origShowLogin(); updateOpenLobbyBtnVisibility(); };
 
-/* --- Drag-to-open/close handling --- */
-let dragActive = false;
-let dragStartX = 0;
-let dragInitialTranslate = 0;
+/* --- Tight & smooth swipe/drag implementation ---
+   - very short threshold (30px)
+   - velocity-based flick for snappy feel
+   - requestAnimationFrame-driven transform while dragging for max smoothness
+*/
+let dragging = false;
+let startX = 0;
+let lastX = 0;
+let lastT = 0;
+let vx = 0; // velocity px/ms
 let drawerWidth = 0;
-const SWIPE_THRESHOLD = 60;
-const EDGE_ZONE = 48;
+const EDGE_ZONE = 36; // allow starting swipe from very edge
+const SHORT_THRESHOLD = 30; // very short requirement
+const VELOCITY_THRESHOLD = 0.35; // px/ms (fast flick detection)
 
-function startDrag(startX, startingOpen){
-  dragActive = true;
-  dragStartX = startX;
+function beginDrag(x, initiallyOpen){
+  dragging = true;
+  startX = x;
+  lastX = x;
+  lastT = performance.now();
   drawerWidth = mobileDrawer.getBoundingClientRect().width || (window.innerWidth * 0.8);
-  dragInitialTranslate = startingOpen ? 0 : -drawerWidth;
-  // make visible for dragging
-  mobileOverlay.style.display = 'block';
-  mobileDrawer.style.display = 'block';
-  mobileOverlay.classList.add('show'); // backgrounds handled by CSS
-  mobileDrawer.classList.remove('show'); // we'll control transform manually
+  // if currently open, initial translate is 0; if closed, start at -drawerWidth
   mobileDrawer.style.transition = 'none';
   mobileOverlay.style.transition = 'none';
-  mobileDrawer.style.willChange = 'transform';
-  mobileOverlay.style.background = 'rgba(0,0,0,0)';
+  // ensure elements visible during drag
+  if(!mobileOverlay.classList.contains('show')) mobileOverlay.style.display = 'block';
+  if(!mobileDrawer.classList.contains('show')) mobileDrawer.style.display = 'block';
+  // temporarily remove CSS "show" so inline transforms control position
+  mobileDrawer.classList.remove('show');
 }
 
-function onDragMove(currentX){
-  if(!dragActive) return;
-  const dx = currentX - dragStartX;
-  let translate = dragInitialTranslate + dx;
+function dragMove(x){
+  if(!dragging) return;
+  const dx = x - startX;
+  // If drawer closed initially, dx positive opens; if drawer open initially, dx negative closes.
+  // We'll compute a translate value clamped between -drawerWidth .. 0
+  // Determine current base: we check if drawer currently shown (class)
+  const wasOpen = mobileDrawer.classList.contains('show');
+  let translate;
+  if(wasOpen){
+    // initial base 0, user drags left to close -> dx negative
+    translate = Math.min(0, dx);
+  } else {
+    // initial base -drawerWidth, user drags right to open -> dx positive
+    translate = Math.max(-drawerWidth, -drawerWidth + dx);
+  }
+  // clamp
   if(translate > 0) translate = 0;
   if(translate < -drawerWidth) translate = -drawerWidth;
+
+  // apply transform smoothly via RAF (but here direct is fine)
   mobileDrawer.style.transform = `translateX(${translate}px)`;
-  const opacityFactor = 1 - (Math.abs(translate) / drawerWidth);
-  mobileOverlay.style.background = `rgba(0,0,0,${0.45 * opacityFactor})`;
+
+  // overlay opacity proportional to openness
+  const openness = 1 - (Math.abs(translate) / drawerWidth);
+  mobileOverlay.style.background = `rgba(0,0,0,${0.45 * openness})`;
   mobileOverlay.style.display = 'block';
+
+  // velocity calc
+  const now = performance.now();
+  const dt = now - lastT || 16;
+  vx = (x - lastX) / dt;
+  lastX = x;
+  lastT = now;
 }
 
 function endDrag(){
-  if(!dragActive) return;
-  dragActive = false;
-  // read current transform
+  if(!dragging) return;
+  dragging = false;
+  // read final translate
   const style = window.getComputedStyle(mobileDrawer);
-  const matrix = style.transform;
   let translateX = 0;
+  const matrix = style.transform;
   if(matrix && matrix !== 'none'){
-    const values = matrix.match(/matrix.*\((.+)\)/)[1].split(', ');
-    translateX = parseFloat(values[4]); // tx
+    try{
+      const values = matrix.match(/matrix.*\((.+)\)/)[1].split(', ');
+      translateX = parseFloat(values[4]);
+    }catch(e){
+      translateX = 0;
+    }
   } else {
-    // fallback to inline style
-    const m = mobileDrawer.style.transform.match(/translateX\((-?\d+)px\)/);
+    // fallback parse inline transform
+    const m = mobileDrawer.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
     translateX = m ? parseFloat(m[1]) : 0;
   }
-  // decide open/close threshold
-  if(translateX > -drawerWidth / 3){
+
+  const wasOpen = mobileDrawer.classList.contains('show');
+  // Decide open/close:
+  // 1) If fling velocity surpasses threshold -> use direction
+  // 2) Else use distance threshold (short)
+  const openDecision = (() => {
+    if(Math.abs(vx) > VELOCITY_THRESHOLD){
+      // velocity px/ms: positive -> finger moved right -> open, negative -> close
+      return vx > 0;
+    }
+    // otherwise use position threshold
+    if(wasOpen){
+      // if more than SHORT_THRESHOLD to left => close
+      return !(Math.abs(translateX) > SHORT_THRESHOLD);
+    } else {
+      // if translated right more than (drawerWidth - SHORT_THRESHOLD) => open
+      return (Math.abs(translateX) < (drawerWidth - SHORT_THRESHOLD));
+    }
+  })();
+
+  // restore transitions for snap
+  mobileDrawer.style.transition = '';
+  mobileOverlay.style.transition = '';
+
+  if(openDecision){
     // open
-    mobileDrawer.style.transition = '';
-    mobileOverlay.style.transition = '';
     mobileDrawer.style.transform = '';
     mobileDrawer.classList.add('show');
     mobileOverlay.classList.add('show');
     updateOpenLobbyBtnVisibility();
   } else {
     // close
-    mobileDrawer.style.transition = '';
-    mobileOverlay.style.transition = '';
+    mobileDrawer.style.transform = `translateX(-${drawerWidth}px)`;
     mobileDrawer.classList.remove('show');
     mobileOverlay.classList.remove('show');
-    // allow the earlier timeout to hide elements after CSS animation
-    setTimeout(()=>{ if(!mobileDrawer.classList.contains('show')){ mobileOverlay.style.display = 'none'; mobileDrawer.style.display = 'none'; updateOpenLobbyBtnVisibility(); } }, 260);
+    setTimeout(()=>{
+      if(!mobileDrawer.classList.contains('show')){
+        mobileOverlay.style.display = 'none';
+        mobileDrawer.style.display = 'none';
+        updateOpenLobbyBtnVisibility();
+      }
+    }, 180);
   }
-  // cleanup
+  // reset velocity
+  vx = 0;
   mobileDrawer.style.willChange = '';
-  mobileOverlay.style.background = '';
 }
 
-/* touch handlers (both open and close) */
+/* Touch handlers using the new fast drag logic */
+let touchStarted = false;
 let touchStartX = 0;
 let touchStartY = 0;
-let touchHandled = false;
 
 document.addEventListener('touchstart', (e)=>{
   if(!isMobile) return;
   const t = e.touches[0];
   touchStartX = t.clientX;
   touchStartY = t.clientY;
-  touchHandled = false;
+  touchStarted = true;
 
   const drawerOpen = mobileDrawer.classList.contains('show');
-  // start drag if:
-  // - drawer is open (allow drag to close) OR
-  // - drawer closed and touch starts near left edge AND we're on HOME view
-  if(drawerOpen || (home.style.display !== 'none' && touchStartX < EDGE_ZONE)){
-    startDrag(touchStartX, drawerOpen);
-    touchHandled = true;
+  // Start drag if:
+  // - drawer open (allow closing drag from anywhere on drawer)
+  // - OR drawer closed AND touch started within EDGE_ZONE AND HOME view visible
+  if(drawerOpen || (home.style.display !== 'none' && touchStartX <= EDGE_ZONE)){
+    beginDrag(touchStartX, drawerOpen);
+  } else {
+    // not a drag start
+    touchStarted = false;
   }
-});
+}, {passive:true});
 
 document.addEventListener('touchmove', (e)=>{
-  if(!isMobile || !touchHandled || !dragActive) return;
+  if(!isMobile || !touchStarted) return;
   const t = e.touches[0];
-  const dx = t.clientX - touchStartX;
-  // if vertical movement dominates, cancel drag
-  if(Math.abs(t.clientY - touchStartY) > Math.abs(dx) + 10) {
-    // abort drag gracefully
-    endDrag();
-    touchHandled = false;
+  const dx = Math.abs(t.clientX - touchStartX);
+  const dy = Math.abs(t.clientY - touchStartY);
+  // if vertical scroll dominates, cancel drag
+  if(dy > dx + 8){
+    if(dragging) { endDrag(); }
+    touchStarted = false;
     return;
   }
-  onDragMove(t.clientX);
-});
+  // perform drag move
+  if(dragging){
+    dragMove(t.clientX);
+  }
+}, {passive:true});
 
 document.addEventListener('touchend', (e)=>{
-  if(!isMobile || !touchHandled) return;
-  endDrag();
-  touchHandled = false;
+  if(!isMobile || !touchStarted) return;
+  touchStarted = false;
+  if(dragging) endDrag();
 });
+
+/* keyboard handling: visualViewport to keep chat above keyboard */
+function onViewportResize(){
+  const vv = window.visualViewport;
+  let keyboardHeight = 0;
+  if(vv){
+    keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
+    if(keyboardHeight < 0) keyboardHeight = 0;
+  } else {
+    keyboardHeight = Math.max(0, (document._lastInnerHeight || window.innerHeight) - window.innerHeight);
+  }
+
+  if(keyboardHeight > 0){
+    chat.style.paddingBottom = (keyboardHeight + 84) + 'px';
+    setTimeout(()=> scrollChatToBottom(false), 60);
+  } else {
+    chat.style.paddingBottom = '';
+    scrollChatToBottom();
+  }
+}
+document._lastInnerHeight = window.innerHeight;
+window.addEventListener('resize', ()=> { document._lastInnerHeight = Math.max(document._lastInnerHeight || 0, window.innerHeight); });
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', onViewportResize);
+} else {
+  window.addEventListener('resize', onViewportResize);
+}
+msg.addEventListener('focus', ()=>{
+  setTimeout(()=> { onViewportResize(); scrollChatToBottom(false); }, 60);
+});
+msg.addEventListener('blur', ()=> { setTimeout(()=> onViewportResize(), 60); });
 
 /* Rooms refresh polling */
 async function refreshRoomsEvery(interval=30000){
@@ -736,70 +837,18 @@ onSnapshot(collection(db,'rooms'), snap => {
   snap.forEach(d => renderRoomEntry(d.id));
 });
 
-/* small safety: escape HTML helpers */
+/* Utilities */
 function escapeHtml(s){
   if(!s && s !== 0) return '';
   return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
 }
 function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
-
-/* Helper: scroll chat to bottom */
 function scrollChatToBottom(instant = true){
   try{
     if(instant) chat.scrollTop = chat.scrollHeight;
     else chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
   }catch(e){}
 }
-
-/* --- VisualViewport / keyboard handling ---
-   Keep chat visible above virtual keyboard:
-   - listen to visualViewport.resize or window.resize fallback
-   - set chat padding-bottom to keyboard height + small offset
-   - when input focused, scroll to bottom after small delay
-*/
-function onViewportResize(){
-  // compute keyboard height if visualViewport available
-  const vv = window.visualViewport;
-  let keyboardHeight = 0;
-  if(vv){
-    keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
-    if(keyboardHeight < 0) keyboardHeight = 0;
-  } else {
-    // fallback: use safe heuristic with window.innerHeight change
-    keyboardHeight = Math.max(0, (document._lastInnerHeight || window.innerHeight) - window.innerHeight);
-  }
-
-  if(keyboardHeight > 0){
-    chat.style.paddingBottom = (keyboardHeight + 80) + 'px'; // 80px to account for input bar + spacing
-    // also ensure inputBar is visible by scrolling slightly
-    setTimeout(()=> scrollChatToBottom(false), 60);
-  } else {
-    chat.style.paddingBottom = '';
-    scrollChatToBottom();
-  }
-}
-
-// store initial innerHeight for fallback
-document._lastInnerHeight = window.innerHeight;
-window.addEventListener('resize', ()=> { document._lastInnerHeight = Math.max(document._lastInnerHeight || 0, window.innerHeight); });
-
-// attach listener
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize', onViewportResize);
-} else {
-  window.addEventListener('resize', onViewportResize);
-}
-
-// when message input focused, ensure chat stays above keyboard and scrolls
-msg.addEventListener('focus', ()=>{
-  setTimeout(()=> {
-    onViewportResize();
-    scrollChatToBottom(false);
-  }, 60);
-});
-msg.addEventListener('blur', ()=>{
-  setTimeout(()=> { onViewportResize(); }, 60);
-});
 
 /* initial mobile drawer closed on load */
 if(isMobile){
@@ -818,9 +867,6 @@ document.addEventListener('visibilitychange', ()=> {
   if(!document.hidden) lastMessageTime = Date.now();
 });
 
-/* small UX: scroll to bottom when new messages arrive (already handled) */
-
-/* End of module */
 </script>
 </body>
 </html>
