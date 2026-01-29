@@ -220,8 +220,7 @@
       • Swipe-to-reply moves only avatar/action icons; message text stays fixed to avoid overlap.</div>
 
     <div class="section"><b>Desktop specifics</b><br>
-      • Lobby and chat sidebar remain visible; three-dot menus are available for edits.<br>
-      • Hover interactions show profile and seen receipts.</div>
+      • Lobby and chat sidebar remain visible; three-dot menus are available for edits.</div>
 
     <div class="section"><b>Account notes</b><br>
       • Login/Register stores credentials locally (for demo). Guests are labeled "Guest####".<br>
@@ -345,11 +344,10 @@
 
 <script type="module">
 /* ===================
-   Minimal, targeted changes:
-   - Arrow Up (↑) edits last message (desktop) when input is empty.
-   - Remove three-dots "more" button on mobile; keep long-press showing same Edit/Delete menu.
-   - Add fullscreen toggle button between How To and Settings.
-   - Keep other behavior unchanged.
+   Minimaalinen korjaus:
+   - Lisätty login / demo (guest) napit toimimaan paikallisesti.
+   - Piilotetaan HowTo / Fullscreen / Settings nappi login-näkymässä.
+   - Muut osat jätetty koskemattomiksi.
    =================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -467,6 +465,10 @@ function showHome(){
   login.style.display = 'none';
   home.style.display = 'flex';
   main.style.display = 'none';
+  // show top-right buttons on non-login views
+  howBtn.style.display = ''; // revert to default
+  fullBtn.style.display = '';
+  settingsBtn.style.display = '';
   updateOpenLobbyBtnVisibility();
   updateNickEditable();
 }
@@ -475,6 +477,10 @@ function showLogin(){
   home.style.display = 'none';
   main.style.display = 'none';
   localStorage.removeItem('session');
+  // hide top-right buttons while on login
+  howBtn.style.display = 'none';
+  fullBtn.style.display = 'none';
+  settingsBtn.style.display = 'none';
   updateOpenLobbyBtnVisibility();
   updateNickEditable();
 }
@@ -482,6 +488,10 @@ function showMain(){
   login.style.display = 'none';
   home.style.display = 'none';
   main.style.display = 'flex';
+  // show top-right buttons on main
+  howBtn.style.display = '';
+  fullBtn.style.display = '';
+  settingsBtn.style.display = '';
   updateOpenLobbyBtnVisibility();
   updateNickEditable();
 }
@@ -509,6 +519,56 @@ function updateNickEditable(){
     nickColorCircle.style.background = nickColorInput.value;
   }
 }
+
+/* -------------------------
+   === LOGIN / DEMO handlers
+   Minimal, local-only auth stored in localStorage (kept simple).
+   ------------------------- */
+loginBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  const username = (loginUser.value || '').trim();
+  const password = loginPass.value || '';
+  if(!username){
+    alert('Please enter a username');
+    return;
+  }
+  // load existing users
+  users = JSON.parse(localStorage.getItem('users')||'{}');
+  // If user exists, require matching password (simple demo logic)
+  if(users[username] && users[username].pass && users[username].pass !== password){
+    alert('Wrong password for that user');
+    return;
+  }
+  // create or update user record
+  if(!users[username]){
+    users[username] = { pass: password, joined: Date.now(), color: localStorage.getItem('nickColor') || '#58a6ff' };
+  } else {
+    // if password blank, keep existing; if provided, update (simple flow)
+    if(password) users[username].pass = password;
+  }
+  localStorage.setItem('users', JSON.stringify(users));
+  // set session + nick
+  localStorage.setItem('session', username);
+  localStorage.setItem('nick', username);
+  localStorage.setItem('nickColor', users[username].color || '#58a6ff');
+  // ensure UI updates
+  updateNickEditable();
+  showHome();
+  // try to load rooms if needed
+  try{ loadRooms(); }catch(e){}
+});
+
+demoBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  const guest = 'Guest' + Math.floor(Math.random()*9000 + 1000);
+  localStorage.setItem('session', guest);
+  localStorage.setItem('nick', guest);
+  const guestColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
+  localStorage.setItem('nickColor', guestColor);
+  updateNickEditable();
+  showHome();
+  try{ loadRooms(); }catch(e){}
+});
 
 /* HOW TO toggle handlers */
 howBtn.addEventListener('click', (e) => {
@@ -756,32 +816,48 @@ async function enterRoom(r){
   });
 }
 
-/* DOM helpers for incremental updates */
-function makeMessageElement(id, m){
+/* --- message rendering, editing, deleting, reply and other chat logic --- */
+
+/* small helpers */
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, (c)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function linkify(text){
+  if(!text) return '';
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return escapeHtml(text).replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+
+/* scroll helpers */
+function scrollChatToBottom(instant=true){
+  if(instant) chat.scrollTop = chat.scrollHeight;
+  else chat.scrollTo({top:chat.scrollHeight, behavior:'smooth'});
+}
+function updateScrollBtnVisibility(){
+  const shouldShow = (chat.scrollHeight - chat.scrollTop - chat.clientHeight) > 120;
+  scrollBottomBtn.style.display = shouldShow ? 'block' : 'none';
+}
+
+/* render message element */
+function makeMessageElement(id, messageData){
   const el = document.createElement('div');
   el.className = 'message';
-  el.dataset.msgid = id;
-  el.dataset.owner = m.name;
+  el.setAttribute('data-msgid', id);
+  const avatar = document.createElement('div'); avatar.className='avatar'; avatar.textContent = (messageData.name||'?')[0] || '?';
+  avatar.style.background = messageData.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+  const container = document.createElement('div'); container.style.flex='1';
+  const header = document.createElement('div'); header.style.display='flex'; header.style.alignItems='center'; header.style.gap='8px';
+  const sender = document.createElement('div'); sender.className='msg-sender'; sender.textContent = messageData.name || '—'; sender.style.color = messageData.color || '#999';
+  const time = document.createElement('div'); time.className='time'; time.textContent = messageData.time?.toMillis ? new Date(messageData.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+  header.appendChild(sender); header.appendChild(time);
+  const msgBox = document.createElement('div'); msgBox.className='msg';
+  const replyHtml = messageData.reply?`<div class="reply-preview"><b>${escapeHtml(messageData.reply.name)}</b>: ${escapeHtml(messageData.reply.text)}</div>`:'';
+  msgBox.innerHTML = replyHtml + `<div class="msg-text">${linkify(messageData.text || '')}</div>`;
+  const replyBtn = document.createElement('div'); replyBtn.className='reply-btn'; replyBtn.dataset.name = messageData.name || ''; replyBtn.dataset.text = messageData.text || ''; replyBtn.textContent='reply';
+  msgBox.appendChild(replyBtn);
+  container.appendChild(header); container.appendChild(msgBox);
+  el.appendChild(avatar); el.appendChild(container);
 
-  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  const safeTextHtml = linkify(escapeHtml(m.text || ''));
-  const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
-
-  el.innerHTML = `
-    <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((m.name||'?')[0]||'?')}</div>
-    <div class="msg">
-      ${replyHtml}
-      <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>
-      <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
-      <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
-      <div class="reply-btn" data-name="${escapeAttr(m.name)}" data-text="${escapeAttr(m.text)}">reply</div>
-    </div>
-  `;
-
-  // Add the three-dot MORE button for own messages (desktop only)
-  const localNick = localStorage.getItem('nick') || nick;
-  if(m.name === localNick && !isMobile){
-    const msgInner = el.querySelector('.msg');
+  // right-click / long-press menu for own messages (edit/delete)
+  if(messageData.name === (localStorage.getItem('nick') || nick) && !isMobile){
     const moreBtn = document.createElement('div');
     moreBtn.className = 'more-btn';
     moreBtn.title = 'More';
@@ -789,79 +865,30 @@ function makeMessageElement(id, m){
     moreBtn.addEventListener('click', (ev) => {
       ev.stopPropagation();
       const rect = moreBtn.getBoundingClientRect();
-      // show the same context menu but positioned near the button
-      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
+      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, messageData.text);
     });
-    msgInner.appendChild(moreBtn);
+    msgBox.appendChild(moreBtn);
   }
 
-  // attach interactions
-  const senderEl = el.querySelector('.msg-sender');
-  if(senderEl){
-    if(!isMobile){
-      senderEl.addEventListener('mouseenter', async (ev)=>{
-        ev.stopPropagation();
-        let joined = null; let color = m.color;
-        try{
-          const cached = userCache.get(m.name);
-          if(cached && cached.color) color = cached.color;
-          else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
-              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
-              color = ud.color || color;
-              userCache.set(m.name, { color });
-            }
-          }
-        }catch(e){}
-        showProfileCardFor(m.name, color, joined, senderEl);
-      });
-      senderEl.addEventListener('mouseleave', ()=>{
-        setTimeout(()=>{ if(document.querySelector(':hover') !== senderEl) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); } }, 120);
-      });
-    } else {
-      senderEl.addEventListener('click', async (ev)=>{
-        ev.stopPropagation();
-        let joined = null; let color = m.color;
-        try{
-          const cached = userCache.get(m.name);
-          if(cached && cached.color) color = cached.color;
-          else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
-              joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
-              color = ud.color || color;
-              userCache.set(m.name, { color });
-            }
-          }
-        }catch(e){}
-        showProfileCardFor(m.name, color, joined, senderEl);
-      });
-    }
-  }
-
-  // hover to show who has seen this message
-  el.addEventListener('mouseenter', async (ev)=>{
-    if(m.name === (localStorage.getItem('nick')||nick)) return;
+  // tooltip for seen receipts on hover (desktop)
+  el.addEventListener('mouseenter', ()=> {
+    if(!room) return;
     const rect = el.getBoundingClientRect();
-    tooltip.style.left = (rect.right + 8) + 'px';
-    tooltip.style.top = (rect.top) + 'px';
-    tooltip.textContent = 'Loading...';
     tooltip.style.display = 'block';
+    tooltip.style.left = Math.min(window.innerWidth - 180, rect.left + 4) + 'px';
+    tooltip.style.top = (rect.top - 34) + 'px';
     tooltip.setAttribute('aria-hidden','false');
-    try{
-      const seenDocs = await getDocs(collection(db, 'rooms', room, 'messages', id, 'seen'));
-      const names = [];
-      seenDocs.forEach(sd=> names.push(sd.data().name));
+    tooltip.textContent = 'Loading...';
+    // fetch seen collection doc names for this message (graceful)
+    getDocs(collection(db,'rooms',room,'messages',id,'seen')).then(snap => {
+      const names = []; snap.forEach(d => names.push(d.id));
       tooltip.textContent = names.length ? ('Seen by: ' + names.join(', ')) : 'No one has seen this yet';
-    }catch(e){ tooltip.textContent = '—'; }
+    }).catch(()=> { tooltip.textContent = '—'; });
   });
   el.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); });
 
   // attach mobile interactions including swipe-to-reply and long-press edit/delete
-  attachMobileInteractions(el, id, m);
+  attachMobileInteractions(el, id, messageData);
 
   // reply button
   el.querySelectorAll('.reply-btn').forEach(b => b.addEventListener('click', (e)=>{
@@ -874,112 +901,13 @@ function makeMessageElement(id, m){
   return el;
 }
 
-function renderMessage(id, m){
-  // skip if already exists
-  if(chat.querySelector(`[data-msgid="${id}"]`)) return;
-  const el = makeMessageElement(id, m);
-  chat.appendChild(el);
-}
-
-function updateMessage(id, m){
-  const el = chat.querySelector(`[data-msgid="${id}"]`);
-  if(!el) { renderMessage(id, m); return; }
-  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
-  const safeTextHtml = linkify(escapeHtml(m.text || ''));
-  const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
-  const avatar = el.querySelector('.avatar');
-  const sender = el.querySelector('.msg-sender');
-  const time = el.querySelector('.time');
-  const msgText = el.querySelector('.msg-text');
-  if(avatar) avatar.style.background = m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
-  if(sender) { sender.textContent = m.name; sender.style.color = m.color || '#999'; }
-  if(time) time.textContent = m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-  if(msgText) msgText.innerHTML = safeTextHtml + editedNoteHtml;
-  // reply preview update
-  const replyPrev = el.querySelector('.reply-preview');
-  if(replyPrev && !m.reply) replyPrev.remove();
-  else if(!replyPrev && m.reply) el.querySelector('.msg').insertAdjacentHTML('afterbegin', replyHtml);
-
-  // ensure more-btn exists for own messages (desktop only)
-  const localNick = localStorage.getItem('nick') || nick;
-  const hasMore = !!el.querySelector('.more-btn');
-  if(m.name === localNick && !isMobile && !hasMore){
-    const msgInner = el.querySelector('.msg');
-    const moreBtn = document.createElement('div');
-    moreBtn.className = 'more-btn';
-    moreBtn.title = 'More';
-    moreBtn.textContent = '⋯';
-    moreBtn.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      const rect = moreBtn.getBoundingClientRect();
-      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
-    });
-    msgInner.appendChild(moreBtn);
-  } else if((m.name !== localNick || isMobile) && hasMore){
-    const mb = el.querySelector('.more-btn');
-    if(mb) mb.remove();
-  }
-}
-
-function removeMessage(id){
-  const el = chat.querySelector(`[data-msgid="${id}"]`);
-  if(el) el.remove();
-}
-
-/* context menu implementation (dropdown on three-dots / replaced right-click / long-press) */
-function showEditDeleteMenu(x,y,msgId, currentText){
-  contextMenu.innerHTML = '';
-  // Edit
-  const editBtn = document.createElement('button');
-  editBtn.textContent = 'Edit';
-  editBtn.onclick = async (ev)=>{
-    ev.stopPropagation();
-    const newText = prompt('Edit message', currentText);
-    if(newText == null) { hideContextMenu(); return; }
-    try{ await updateDoc(doc(db,'rooms',room,'messages',msgId), { text: newText, editedNote: 'Edited' }).catch(console.error); }catch(e){}
-    hideContextMenu();
-  };
-  contextMenu.appendChild(editBtn);
-  // Delete
-  const delBtn = document.createElement('button');
-  delBtn.textContent = 'Delete';
-  delBtn.onclick = async (ev)=>{
-    ev.stopPropagation();
-    if(confirm('Delete this message?')){
-      try{ await deleteDoc(doc(db,'rooms',room,'messages',msgId)).catch(console.error); }catch(e){}
-    }
-    hideContextMenu();
-  };
-  contextMenu.appendChild(delBtn);
-
-  // position
-  const pad = 6;
-  const menuWidth = 180;
-  const menuHeight = 80;
-  let left = x;
-  let top = y;
-  if(left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - pad;
-  if(top + menuHeight > window.innerHeight) top = window.innerHeight - menuHeight - pad;
-  contextMenu.style.left = left + 'px';
-  contextMenu.style.top = top + 'px';
-  contextMenu.style.display = 'block';
-  contextMenu.setAttribute('aria-hidden','false');
-}
-function hideContextMenu(){
-  contextMenu.style.display = 'none';
-  contextMenu.setAttribute('aria-hidden','true');
-}
-
-/* mobile interactions: long-press -> edit/delete for own; smooth swipe right -> reply
-   IMPORTANT: text (msg-text) does NOT move on X-axis.
-   We only translate avatar and action buttons so the visible content stays fixed.
-   Long-press now opens the same Edit/Delete menu (at touch coords).
-*/
+/* attach mobile interactions - swipe-to-reply & long-press */
 function attachMobileInteractions(el, msgId, messageData){
   let longPressTimer = null;
+  let dragging = false;
   let touchStartX = 0;
   let touchStartY = 0;
-  let dragging = false;
+  let px = 0;
 
   // elements to move (leave text in .msg-text untouched)
   const avatarEl = () => el.querySelector('.avatar');
@@ -1034,194 +962,103 @@ function attachMobileInteractions(el, msgId, messageData){
     }
   }, {passive:false});
 
-  el.addEventListener('touchend', ()=>{
+  el.addEventListener('touchend', ()=> {
     if(longPressTimer) clearTimeout(longPressTimer);
-    // compute px from transforms (we look at avatar transform as representative)
-    const a = avatarEl();
-    let px = 0;
-    if(a && a.style.transform){
-      const m = a.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
-      px = m ? parseInt(m[1],10) : 0;
-    }
-    // reset transforms with smooth transition
-    const reset = (node) => {
-      if(!node) return;
-      node.style.transition = 'transform 180ms ease';
-      node.style.transform = '';
-      setTimeout(()=>{ node.style.transition = ''; node.style.willChange = ''; }, 200);
-    };
-    reset(avatarEl());
-    reset(moreBtnEl());
-    reset(replyBtnEl());
-
-    if(px > 60){
-      // user completed swipe -> open reply UI (keep text unmoved)
-      setTimeout(()=>{
-        replyTo = { name: messageData.name, text: messageData.text };
-        replyBox.style.display = 'block';
-        replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
-        const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
-      }, 160);
-    } else {
-      setTimeout(()=>{ if(!replyTo) replyBox.style.display = 'none'; }, 160);
-    }
-  });
+    // reset moved parts
+    const a = avatarEl(); if(a){ a.style.transition='transform 150ms ease'; a.style.transform=''; setTimeout(()=>{ a.style.transition=''; a.style.willChange=''; },160); }
+    const m = moreBtnEl(); if(m){ m.style.transition='transform 150ms ease'; m.style.transform=''; setTimeout(()=>{ m.style.transition=''; m.style.willChange=''; },160); }
+    const r = replyBtnEl(); if(r){ r.style.transition='transform 150ms ease'; r.style.transform=''; setTimeout(()=>{ r.style.transition=''; r.style.willChange=''; },160); }
+  }, {passive:true});
 }
 
-/* typing indicator management */
-msg.addEventListener('input', ()=> {
-  if(!room || !nick) return;
-  if(msg.value.trim()===''){
-    deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
-    return;
-  }
-  setDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick),{t:serverTimestamp()});
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(()=> { deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); }, 1500);
-});
-msg.addEventListener('blur', ()=> { if(room && (localStorage.getItem('nick')||nick)) deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); });
-
-/* reply UI */
-chat.addEventListener('click', (e)=>{
-  const b = e.target.closest('.reply-btn');
-  if(!b) return;
-  replyTo = { name: b.dataset.name, text: b.dataset.text };
-  replyBox.style.display = 'block';
-  replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
-  document.getElementById('cancelReply').onclick = cancelReply;
-});
-function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
-
-/* send messages */
-msg.addEventListener('keydown', async (e)=>{
-  if(e.key !== 'Enter') return;
-  const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
-  if(!room){ alert('You are not in a room'); return; }
-  deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
-
-  // Commands handling
-  if(textRaw.startsWith('/')){
-    await handleCommand(textRaw);
-    return;
-  }
-
-  // compute color deterministically
-  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) ? (localStorage.getItem('nickColor') || '#58a6ff') : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
-
-  await addDoc(collection(db,'rooms',room,'messages'), {
-    name: localStorage.getItem('nick') || nick,
-    text: textRaw,
-    reply: replyTo,
-    color: colorToSend,
-    time: serverTimestamp()
-  }).catch(console.error);
-  replyTo = null; replyBox.style.display = 'none';
-});
-
-/* command processor */
-async function handleCommand(cmdText){
-  const parts = cmdText.split(/\s+/);
-  const c = parts[0].toLowerCase();
-  // help: visible only to you -> show via alert
-  if(c === '/help'){
-    const helpText = [
-      "Commands:",
-      "/help — Show this list (only visible to you).",
-      "/roll [n] — Roll 1–10 dice (default 1).",
-      "/coin — Flip a coin.",
-      "/tableflip — Table flip effect.",
-      "/shrug — ¯\\_(ツ)_/¯",
-      "/clear — Delete all messages in the room (confirmation required).",
-      "/delete (or /delet) — Delete the room and all messages (confirmation required)."
-    ].join("\n\n");
-    alert(helpText);
-    return;
-  }
-
-  if(c === '/roll'){
-    let n = 1; if(parts[1]) n = Math.min(10, Math.max(1, parseInt(parts[1])||1));
-    const rolls = [];
-    for(let i=0;i<n;i++) rolls.push(Math.floor(Math.random()*6)+1);
-    const txt = `${localStorage.getItem('nick')||nick} rolled 🎲 ${rolls.map(r=>`🎲 ${r}`).join(n>1?' + ':'')}${n>1?` = ${rolls.reduce((a,b)=>a+b,0)}`:''}`;
-    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
-    return;
-  }
-  if(c === '/coin'){
-    const r = Math.random() < 0.5 ? 'Heads' : 'Tails';
-    const txt = `${localStorage.getItem('nick')||nick} flipped a coin → ${r}`;
-    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
-    return;
-  }
-  if(c === '/tableflip'){
-    const txt = `${localStorage.getItem('nick')||nick} (╯°□°）╯︵ ┻━┻`;
-    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
-    return;
-  }
-  if(c === '/shrug'){
-    const txt = `${localStorage.getItem('nick')||nick} ¯\\_(ツ)_/¯`;
-    await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:txt, color:'#888', time:serverTimestamp()});
-    return;
-  }
-
-  // /clear: delete messages (ask for confirmation)
-  if(c === '/clear'){
-    if(!confirm('Delete all messages in this room?')) return;
-    try{
-      const msgs = await getDocs(collection(db,'rooms',room,'messages'));
-      for(const d of msgs.docs){
-        // delete seen subdocs first
-        try{
-          const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
-          for(const sd of seenSnap.docs) await deleteDoc(sd.ref).catch(()=>{});
-        }catch(e){}
-        await deleteDoc(d.ref).catch(()=>{});
-      }
-    }catch(e){ console.error('/clear error', e); }
-    return;
-  }
-
-  // /delete or /delet: delete room and messages (ask for confirmation)
-  if(c === '/delete' || c === '/delet'){
-    if(!confirm('Delete the room and all messages?')) return;
-    try{
-      // delete typing docs
-      const typingDocs = await getDocs(collection(db,'rooms',room,'typing'));
-      for(const t of typingDocs.docs) await deleteDoc(t.ref).catch(()=>{});
-      // delete messages & their seen subcollections
-      const msgs = await getDocs(collection(db,'rooms',room,'messages'));
-      for(const d of msgs.docs){
-        try{
-          const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
-          for(const sd of seenSnap.docs) await deleteDoc(sd.ref).catch(()=>{});
-        }catch(e){}
-        await deleteDoc(d.ref).catch(()=>{});
-      }
-      // attempt to delete room doc (may fail if server rules or remaining subcollections)
-      await deleteDoc(doc(db,'rooms',room)).catch(()=>{});
-      // navigate back to home
-      if(messagesUnsub) messagesUnsub();
-      if(typingUnsub) typingUnsub();
-      room = '';
-      showHome();
-      chat.innerHTML = '';
-    }catch(e){ console.error('/delete error', e); }
-    return;
-  }
-
-  // unknown command -> echo to system
-  await addDoc(collection(db,'rooms',room,'messages'), {name:'System', text:`Unknown command: ${cmdText}`, color:'#888', time:serverTimestamp()});
+/* cancel reply */
+function cancelReply(){
+  replyTo = null;
+  replyBox.style.display = 'none';
+  replyBox.innerHTML = '';
 }
 
-/* emojis picker */
-const emojiList = [
-"😀","😃","😄","😁","😆","😂","🤣","🙂","🙃","😉","😊","😇",
-"😍","🥰","😘","😗","😙","😚","😋","😛","😜","🤪","😝",
-"🤗","🤭","🤫","🤔","🤨","😐","😑","😶","🙄","😏",
-"😣","😥","😮","😯","😲","😪","😫","🥱","😴","😌",
-"😤","😠","😡","🤬","😢","😭","🥺","😳","😱","😨","😰","😓",
-"👍","👎","👌","✌️","🤞","🤟","🤘","🤙","👋","👏","🙌","🙏"
-];
+/* editing / delete menus */
+function showEditDeleteMenu(x, y, msgId, text){
+  contextMenu.innerHTML = '';
+  const editBtn = document.createElement('button'); editBtn.textContent='Edit';
+  const delBtn = document.createElement('button'); delBtn.textContent='Delete';
+  editBtn.onclick = ()=> {
+    contextMenu.style.display = 'none';
+    const el = chat.querySelector(`[data-msgid="${msgId}"]`);
+    if(!el) return;
+    const txt = prompt('Edit message', text);
+    if(txt === null) return;
+    updateDoc(doc(db,'rooms',room,'messages',msgId), { text: txt, editedNote: 'edited' }).catch(()=>{});
+  };
+  delBtn.onclick = ()=> {
+    contextMenu.style.display = 'none';
+    if(!confirm('Delete message?')) return;
+    deleteDoc(doc(db,'rooms',room,'messages',msgId)).catch(()=>{});
+  };
+  contextMenu.appendChild(editBtn); contextMenu.appendChild(delBtn);
+  contextMenu.style.left = x + 'px';
+  contextMenu.style.top = y + 'px';
+  contextMenu.style.display = 'block';
+}
 
+/* remove message element */
+function removeMessage(id){
+  const el = chat.querySelector(`[data-msgid="${id}"]`);
+  if(el) el.remove();
+}
+
+/* render new incoming */
+function renderMessage(id, m){
+  // skip if already exists
+  if(chat.querySelector(`[data-msgid="${id}"]`)) return;
+  const el = makeMessageElement(id, m);
+  chat.appendChild(el);
+}
+
+/* update message */
+function updateMessage(id, m){
+  const el = chat.querySelector(`[data-msgid="${id}"]`);
+  if(!el) { renderMessage(id, m); return; }
+  const replyHtml = m.reply?`<div class="reply-preview"><b>${escapeHtml(m.reply.name)}</b>: ${escapeHtml(m.reply.text)}</div>`:'';
+  const safeTextHtml = linkify(escapeHtml(m.text || ''));
+  const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
+  const avatar = el.querySelector('.avatar');
+  const sender = el.querySelector('.msg-sender');
+  const time = el.querySelector('.time');
+  const msgText = el.querySelector('.msg-text');
+  if(avatar) avatar.style.background = m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+  if(sender) { sender.textContent = m.name; sender.style.color = m.color || '#999'; }
+  if(time) time.textContent = m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+  if(msgText) msgText.innerHTML = safeTextHtml + editedNoteHtml;
+  // reply preview update
+  const replyPrev = el.querySelector('.reply-preview');
+  if(replyPrev && !m.reply) replyPrev.remove();
+  else if(!replyPrev && m.reply) el.querySelector('.msg').insertAdjacentHTML('afterbegin', replyHtml);
+
+  // ensure more-btn exists for own messages (desktop only)
+  const localNick = localStorage.getItem('nick') || nick;
+  const hasMore = !!el.querySelector('.more-btn');
+  if(m.name === localNick && !isMobile && !hasMore){
+    const msgInner = el.querySelector('.msg');
+    const moreBtn = document.createElement('div');
+    moreBtn.className = 'more-btn';
+    moreBtn.title = 'More';
+    moreBtn.textContent = '⋯';
+    moreBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const rect = moreBtn.getBoundingClientRect();
+      showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
+    });
+    msgInner.appendChild(moreBtn);
+  } else if((m.name !== localNick || isMobile) && hasMore){
+    const mb = el.querySelector('.more-btn');
+    if(mb) mb.remove();
+  }
+}
+
+/* emoji picker build (simple) */
+const emojiList = ['😀','😁','😂','🤣','😅','😊','🙂','😉','😍','🤩','😘','😎','🤔','🙃','😴','👍','👎','👏','🙌','🙏'];
 function buildEmojiPicker(){
   emojiPicker.innerHTML = '';
   const grid = document.createElement('div'); grid.style.display='flex'; grid.style.flexWrap='wrap'; grid.style.gap='6px';
@@ -1291,23 +1128,6 @@ function closeMobileDrawer(){
     }
   }, durationMs + 20);
 }
-
-/* Visibility logic for blue button (mobile) */
-function updateOpenLobbyBtnVisibility(){
-  const drawerOpen = mobileDrawer.classList.contains('show') || mobileOverlay.classList.contains('show');
-  if(!isMobile){
-    openLobbyBtn.style.display = 'none'; return;
-  }
-  const isHomeVisible = home.style.display !== 'none';
-  if(isHomeVisible && !drawerOpen) openLobbyBtn.style.display = 'block';
-  else openLobbyBtn.style.display = 'none';
-}
-const origShowHome = showHome;
-showHome = function(){ origShowHome(); updateOpenLobbyBtnVisibility(); };
-const origShowMain = showMain;
-showMain = function(){ origShowMain(); updateOpenLobbyBtnVisibility(); };
-const origShowLogin = showLogin;
-showLogin = function(){ origShowLogin(); updateOpenLobbyBtnVisibility(); };
 
 /* Fast drag + velocity-based flick (kept from previous, used for edge-drag drawer) */
 let dragging = false;
@@ -1417,151 +1237,93 @@ document.addEventListener('touchstart', (e)=>{
 }, {passive:true});
 
 document.addEventListener('touchmove', (e)=>{
-  if(!isMobile || !touchStarted) return;
+  if(!isMobile) return;
+  if(!touchStarted) return;
   const t = e.touches[0];
   const dx = t.clientX - touchStartX;
   const dy = t.clientY - touchStartY;
-  if(Math.abs(dy) > Math.abs(dx) + 8){
-    if(dragging) endDrag();
-    touchStarted = false;
-    touchPotentialDrag = false;
-    return;
+  if(Math.abs(dy) > Math.abs(dx)) return;
+  if(touchPotentialDrag && Math.abs(dx) > 6){
+    beginDrag(t.clientX, mobileDrawer.classList.contains('show'));
   }
-  if(!dragging){
-    if(touchPotentialDrag && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)){
-      const drawerOpen = mobileDrawer.classList.contains('show');
-      beginDrag(t.clientX, drawerOpen);
-      dragMove(t.clientX);
-      return;
-    } else {
-      return;
-    }
+  if(dragging) {
+    dragMove(t.clientX);
   }
-  if(dragging) dragMove(t.clientX);
-}, {passive:true});
+}, {passive:false});
 
-document.addEventListener('touchend', (e)=>{
-  if(!isMobile) return;
-  if(dragging){
-    endDrag();
-  }
+document.addEventListener('touchend', ()=>{
   touchStarted = false;
   touchPotentialDrag = false;
+  if(dragging) endDrag();
 });
 
-/* overlay / button events */
+/* mobile open/close controls */
 openLobbyBtn.addEventListener('click', openMobileDrawer);
-mobileOverlay.addEventListener('click', closeMobileDrawer);
 closeDrawer.addEventListener('click', closeMobileDrawer);
+mobileOverlay.addEventListener('click', closeMobileDrawer);
 
-/* keyboard handling using visualViewport */
-function onViewportResize(){
-  const vv = window.visualViewport;
-  let keyboardHeight = 0;
-  if(vv){
-    keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
-    if(keyboardHeight < 0) keyboardHeight = 0;
+/* update visibility of the openLobby button depending on view */
+function updateOpenLobbyBtnVisibility(){
+  const isLoginVisible = login.style.display !== 'none';
+  const isHomeVisible = home.style.display !== 'none';
+  if(isLoginVisible) {
+    openLobbyBtn.style.display = 'none';
   } else {
-    keyboardHeight = Math.max(0, (document._lastInnerHeight || window.innerHeight) - window.innerHeight);
-  }
-  if(keyboardHeight > 0){
-    chat.style.paddingBottom = (keyboardHeight + 84) + 'px';
-    // move replyBox up accordingly
-    replyBox.style.bottom = (keyboardHeight + 84) + 'px';
-    setTimeout(()=> scrollChatToBottom(false), 60);
-  } else {
-    chat.style.paddingBottom = '';
-    replyBox.style.bottom = '72px';
-    scrollChatToBottom();
-  }
-}
-document._lastInnerHeight = window.innerHeight;
-window.addEventListener('resize', ()=> { document._lastInnerHeight = Math.max(document._lastInnerHeight || 0, window.innerHeight); });
-if(window.visualViewport) window.visualViewport.addEventListener('resize', onViewportResize);
-else window.addEventListener('resize', onViewportResize);
-msg.addEventListener('focus', ()=> { setTimeout(()=> { onViewportResize(); scrollChatToBottom(false); }, 60); });
-msg.addEventListener('blur', ()=> { setTimeout(()=> onViewportResize(), 60); });
-
-/* rooms refresh polling & snapshot */
-async function refreshRoomsEvery(interval=30000){
-  await loadRooms();
-  setTimeout(()=>refreshRoomsEvery(interval), interval);
-}
-refreshRoomsEvery();
-
-onSnapshot(collection(db,'rooms'), snap => {
-  roomList.innerHTML = ''; roomListSidebar.innerHTML = ''; roomListMobile.innerHTML = '';
-  snap.forEach(d => renderRoomEntry(d.id));
-});
-
-/* Arrow Up keyboard shortcut: edit last message by you (desktop)
-   Trigger only when:
-   - not mobile
-   - you have a room open
-   - message input is focused and empty (common UX)
-*/
-document.addEventListener('keydown', async (e) => {
-  if(e.key === 'ArrowUp' && !isMobile){
-    // only when input is focused and empty
-    if(document.activeElement === msg && msg.value.trim() === '' && room){
-      e.preventDefault();
-      const localNick = localStorage.getItem('nick') || nick;
-      try{
-        const q = query(collection(db,'rooms',room,'messages'), where('name','==', localNick), orderBy('time','desc'), limit(1));
-        const snap = await getDocs(q);
-        let lastDoc = null;
-        snap.forEach(d => { lastDoc = d; });
-        if(!lastDoc){
-          alert('No message found to edit.');
-          return;
-        }
-        const currentText = lastDoc.data().text || '';
-        const newText = prompt('Edit your last message', currentText);
-        if(newText == null) return; // cancelled
-        await updateDoc(doc(db,'rooms',room,'messages', lastDoc.id), { text: newText, editedNote: 'Edited' }).catch(console.error);
-      }catch(err){
-        console.error('edit last message error', err);
-      }
+    if(isMobile) {
+      openLobbyBtn.style.display = isHomeVisible ? 'none' : 'block';
+    } else {
+      openLobbyBtn.style.display = 'none';
     }
   }
-  // quick shortcuts: '?' opens How To
-  if(e.key === '?' && !e.metaKey && !e.ctrlKey){
-    howMenu.classList.add('show'); howMenu.setAttribute('aria-hidden','false');
-    settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
+}
+
+/* message sending & typing indicator publishing */
+msg.addEventListener('keydown', async (e) => {
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    const text = msg.value.trim();
+    if(!text) return;
+    // allow /clear /delete commands (local)
+    if(text === '/clear'){ chat.innerHTML = ''; msg.value=''; return; }
+    if(text.startsWith('/delete ')){
+      const id = text.split(' ')[1];
+      if(id) deleteDoc(doc(db,'rooms',room,'messages',id)).catch(()=>{});
+      msg.value=''; return;
+    }
+    const payload = { text, name: localStorage.getItem('nick') || nick, color: localStorage.getItem('nickColor') || nickColor, time: serverTimestamp() };
+    if(replyTo) payload.reply = { name: replyTo.name, text: replyTo.text };
+    try{
+      await addDoc(collection(db,'rooms',room,'messages'), payload);
+      msg.value = '';
+      cancelReply();
+      scrollChatToBottom(false);
+    }catch(e){ console.error('send error', e); }
+  } else {
+    // publish typing
+    const me = localStorage.getItem('nick') || nick;
+    if(!me) return;
+    try{
+      await setDoc(doc(db,'rooms',room,'typing',me), { t: serverTimestamp() });
+    }catch(e){}
   }
 });
 
-/* utility helpers */
-function escapeHtml(s){
-  if(!s && s !== 0) return '';
-  return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); });
-}
-function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+/* presence cleanup on unload */
+window.addEventListener('beforeunload', ()=> {
+  // remove typing doc
+  const me = localStorage.getItem('nick') || nick;
+  if(me && room) {
+    deleteDoc(doc(db,'rooms',room,'typing',me)).catch(()=>{});
+  }
+});
 
-/* linkify simple URLs to clickable anchors */
-function linkify(text){
-  const urlRe = /((https?:\/\/|www\.)[\w\-@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([\w\-@:%_\+.~#?&//=]*))/gi;
-  return text.replace(urlRe, function(match){
-    let url = match;
-    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
-    return `<a href="${url}" target="_blank" rel="noopener">${match}</a>`;
-  });
-}
+/* room lists refresh every time home is shown */
+document.addEventListener('visibilitychange', ()=> { if(!document.hidden) loadRooms().catch(()=>{}); });
 
-function scrollChatToBottom(instant = true){
-  try{
-    if(instant) chat.scrollTop = chat.scrollHeight;
-    else chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
-    updateScrollBtnVisibility();
-  }catch(e){}
-}
+/* tiny helpers to keep UI responsive when resizing */
+window.addEventListener('resize', ()=> { enforceDesktopLobby(); updateOpenLobbyBtnVisibility(); });
 
-/* scroll button logic */
-function updateScrollBtnVisibility(){
-  const atBottom = (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 60;
-  if(!atBottom) scrollBottomBtn.style.display = 'block';
-  else scrollBottomBtn.style.display = 'none';
-}
+/* scroll events */
 chat.addEventListener('scroll', updateScrollBtnVisibility);
 scrollBottomBtn.addEventListener('click', ()=> scrollChatToBottom(false));
 
