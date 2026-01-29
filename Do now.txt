@@ -1,0 +1,19 @@
+Online / offline / last seen (Valikko oikealta avattavissa)
+
+Guestille eri badge (👻 Guest) 
+
+Profiilikortti (klikkaa nimeä → väri, liittynyt, viestien määrä) "Lobbyn yläosassa oikealla oleva avattava dropdown valikko."
+
+Viestin muokkaus (oma viesti → “edit”) + Viestin poistaminen (vain omat)   Pianmalla mobiililla pitkään pohjassa - Desktopissa right clickaamalla tulee vaihtoehdot haluaako poistaa viestin tai muokata sitä.
+
+Swipe reply (vedä viestiä → reply) (moiililla).
+
+Floating “scroll to bottom” -nappi Mobiililla ja desktopilla.
+
+Komennot:
+/roll
+→ Nick rolled 🎲 4
+/roll 2
+→ Nick rolled 🎲 2 + 🎲 6 = 8
+/coin 
+→ kruuna/klaava
