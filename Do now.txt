@@ -1,4 +1,4 @@
-Online / offline / last seen (Valikko oikealta avattavissa)
+Online / offline / last seen (Valikko  käyttäjistä (ei guesteja) oikealta avattavissa) niinkuin dc.
 
 Guestille eri badge (👻 Guest) 
 
