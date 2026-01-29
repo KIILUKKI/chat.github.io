@@ -381,7 +381,7 @@
 <script type="module">
 /* ===============
    Firestore + Auth enabled client
-   Minimal, targeted changes: add Firebase Auth (fake-email) and wire login/register.
+   Minimal, targeted changes: write user profiles under users/{uid}.
    Rest of the app logic preserved as-is and uses localStorage.nick for compatibility.
    =============== */
 
@@ -517,7 +517,6 @@ function showLogin(){
   login.style.display = 'flex';
   home.style.display = 'none';
   main.style.display = 'none';
-  // do not auto-clear session here; onAuthStateChanged handles sign-out
   if(howBtn) howBtn.style.display = 'none';
   if(fullBtn) fullBtn.style.display = 'none';
   if(settingsBtn) settingsBtn.style.display = 'none';
@@ -545,6 +544,10 @@ onAuthStateChanged(auth, async (user) => {
         await updateProfile(user, { displayName: username });
       }
     }catch(e){}
+    // ensure a users/{uid} doc exists - safe to write because auth.uid == uid
+    try{
+      await setDoc(doc(db,'users', user.uid), { displayName: username, color: localStorage.getItem('nickColor') || '#58a6ff', joined: serverTimestamp() }, { merge: true }).catch(()=>{});
+    }catch(e){}
     localStorage.setItem('session', username);
     localStorage.setItem('nick', username);
     if(!localStorage.getItem('nickColor')){
@@ -557,7 +560,6 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     // signed out
     localStorage.removeItem('session');
-    // leave nick in localStorage if present (so UI can show previous nick)
     showLogin();
   }
 });
@@ -645,7 +647,7 @@ settingsLogout.addEventListener('click', async () => {
   showLogin();
 });
 
-/* Delete user via settings: attempt to delete Firestore profile and Auth user if possible */
+/* Delete user via settings: delete users/{uid} and attempt to delete Auth user */
 settingsDelete.addEventListener('click', async () => {
   settingsMenu.classList.remove('show');
   const session = localStorage.getItem('session');
@@ -653,8 +655,10 @@ settingsDelete.addEventListener('click', async () => {
   if(session.startsWith('Guest')){ alert('Guest account cannot be deleted.'); return; }
   if(!confirm(`Delete user "${session}" and their stored credentials? This cannot be undone.`)) return;
   try{
-    // delete Firestore user doc (if any)
-    await deleteDoc(doc(db,'users',session)).catch(()=>{});
+    // delete Firestore user doc under current uid
+    if(auth.currentUser){
+      await deleteDoc(doc(db,'users',auth.currentUser.uid)).catch(()=>{});
+    }
   }catch(e){}
   // attempt to delete Auth user if it's the current user
   try{
@@ -667,7 +671,9 @@ settingsDelete.addEventListener('click', async () => {
   showLogin();
 });
 
-/* profile card show when hovering (desktop) or clicking (mobile) a name */
+/* profile card show when hovering (desktop) or clicking (mobile) a name
+   NOTE: user docs are stored under users/{uid}, so we query by displayName.
+*/
 function showProfileCardFor(name, color, joined, anchorEl){
   profileAvatar.textContent = name?.[0] || '?';
   profileAvatar.style.background = color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
@@ -690,10 +696,14 @@ nickColorCircle.addEventListener('click', ()=> {
 nickColorInput.addEventListener('input', async ()=>{
   nickColorCircle.style.background = nickColorInput.value;
   localStorage.setItem('nickColor', nickColorInput.value);
-  const session = localStorage.getItem('session') || '';
-  if(session && !session.startsWith('Guest')){
-    try{ await setDoc(doc(db,'users',session), { color: nickColorInput.value, joined: serverTimestamp() }, { merge: true }); userCache.set(session, { color: nickColorInput.value }); }catch(e){}
-  }
+  // update users/{uid} doc (if authenticated). Rules expect users/{uid}
+  try{
+    if(auth.currentUser){
+      await setDoc(doc(db,'users',auth.currentUser.uid), { displayName: auth.currentUser.displayName || localStorage.getItem('nick'), color: nickColorInput.value, joined: serverTimestamp() }, { merge: true });
+      // update cache by displayName key to avoid refetch
+      if(auth.currentUser.displayName) userCache.set(auth.currentUser.displayName, { color: nickColorInput.value });
+    }
+  }catch(e){}
 });
 
 /* rooms load/render */
@@ -875,9 +885,11 @@ function makeMessageElement(id, m){
           const cached = userCache.get(m.name);
           if(cached && cached.color) color = cached.color;
           else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
+            // Query users collection by displayName (users stored under uid)
+            const q = query(collection(db,'users'), where('displayName','==', m.name), limit(1));
+            const snaps = await getDocs(q);
+            if(snaps && snaps.docs && snaps.docs.length){
+              const ud = snaps.docs[0].data();
               joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
               color = ud.color || color;
               userCache.set(m.name, { color });
@@ -897,9 +909,10 @@ function makeMessageElement(id, m){
           const cached = userCache.get(m.name);
           if(cached && cached.color) color = cached.color;
           else {
-            const us = await getDoc(doc(db,'users',m.name));
-            if(us.exists()){
-              const ud = us.data();
+            const q = query(collection(db,'users'), where('displayName','==', m.name), limit(1));
+            const snaps = await getDocs(q);
+            if(snaps && snaps.docs && snaps.docs.length){
+              const ud = snaps.docs[0].data();
               joined = ud.joined?.toMillis ? new Date(ud.joined.toMillis()) : ud.joined;
               color = ud.color || color;
               userCache.set(m.name, { color });
@@ -1120,7 +1133,6 @@ function attachMobileInteractions(el, msgId, messageData){
 msg.addEventListener('input', ()=> {
   if(!room) return;
   if(!auth.currentUser){
-    // not authenticated => remove typing doc if any and return
     try{ deleteDoc(doc(db,'rooms',room,'typing', localStorage.getItem('nick')||nick)).catch(()=>{}); }catch(e){}
     return;
   }
@@ -1614,8 +1626,8 @@ loginBtn.addEventListener('click', async (e) => {
         const cred = await createUserWithEmailAndPassword(auth, fakeEmail, p);
         // set displayName
         await updateProfile(cred.user, { displayName: username }).catch(()=>{});
-        // create a lightweight users doc if desired
-        await setDoc(doc(db,'users',username), { color: localStorage.getItem('nickColor') || '#58a6ff', joined: serverTimestamp() }).catch(()=>{});
+        // create a lightweight users doc under users/{uid} to satisfy rules (uid must match)
+        await setDoc(doc(db,'users',cred.user.uid), { displayName: username, color: localStorage.getItem('nickColor') || '#58a6ff', joined: serverTimestamp() }).catch(()=>{});
         return;
       } else {
         // other errors
@@ -1644,6 +1656,8 @@ demoBtn.addEventListener('click', async (e) => {
     // set local profile color
     const guestColor = getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim() || '#9aa0a6';
     localStorage.setItem('nickColor', guestColor);
+    // create users/{uid} doc so rules allow writes
+    await setDoc(doc(db,'users',cred.user.uid), { displayName: username, color: guestColor, joined: serverTimestamp() }).catch(()=>{});
     localStorage.setItem('session', username);
     localStorage.setItem('nick', username);
     nickInput.value = username;
