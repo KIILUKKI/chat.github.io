@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -21,109 +21,125 @@
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
   #app{width:100%;height:100%;position:relative;overflow:hidden}
 
+/* SETTINGS GEAR (top-right) */
+#settingsBtn{position:fixed;top:12px;right:12px;background:transparent;border:0;color:var(--text);font-size:20px;padding:10px;border-radius:10px;cursor:pointer;z-index:90}
+.settings-menu{position:fixed;top:52px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:8px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:91}
+.settings-menu.show{display:block}
+.settings-menu button{display:block;width:100%;padding:8px 12px;background:transparent;border:0;color:var(--text);text-align:left;border-radius:8px;cursor:pointer}
+.settings-menu button:hover{background:rgba(255,255,255,0.03)}
+
 /* LOGIN */
-  #login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px;}
-  #login input{padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text);width:100%;max-width:320px}
-  #login button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:320px;width:100%}
-  #login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+#login{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;background:var(--bg);z-index:30;padding:20px;}
+#login input{padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text);width:100%;max-width:360px}
+#login button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%}
+#login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
 
 /* APP LAYOUT */
-  #home,#main{position:absolute;inset:0;display:none}
-  #home{display:flex;flex-direction:row}
-  #logoutBtn{position:absolute;top:12px;right:12px;padding:8px 12px;background:#f85149;color:#fff;border:none;border-radius:10px;cursor:pointer;z-index:25;font-weight:700}
+#home,#main{position:absolute;inset:0;display:none}
+#home{display:flex;flex-direction:row}
 
 /* Lobby (left) */
-  #homeLeft{width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;border-right:1px solid #0d1117;height:100%;overflow:auto;transition:width 200ms ease,transform 220ms cubic-bezier(.2,.9,.3,1);position:relative;}
-  #homeLeft.collapsed{width:40px;padding:8px}
-  #lobbyHeader{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-  #lobbyTitle{flex:1;font-weight:700}
-  .room{padding:10px 12px;border-radius:10px;background:var(--card);margin-bottom:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .room:hover{background:var(--accent);color:#000}
+#homeLeft{width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;border-right:1px solid #0d1117;height:100%;overflow:auto;transition:width 200ms ease,transform 220ms cubic-bezier(.2,.9,.3,1);position:relative;}
+#homeLeft.collapsed{width:40px;padding:8px}
+#lobbyHeader{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+#lobbyTitle{flex:1;font-weight:700}
+.room{padding:10px 12px;border-radius:10px;background:var(--card);margin-bottom:8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room:hover{background:var(--accent);color:#000}
 
 /* lobby controls */
-  #lobbyControls{display:flex;gap:6px;align-items:center;margin-bottom:8px}
-  .iconbtn{background:transparent;border:0;color:var(--text);padding:6px;border-radius:8px;cursor:pointer}
-  .iconbtn:active{transform:scale(0.98)}
-  #lobbySizeBtn{font-weight:700;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)}
+#lobbyControls{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.iconbtn{background:transparent;border:0;color:var(--text);padding:6px;border-radius:8px;cursor:pointer}
+.iconbtn:active{transform:scale(0.98)}
+#lobbySizeBtn{font-weight:700;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03)}
 
 /* center */
-  #homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:18px}
-  #nickRow{display:flex;gap:12px;width:100%;max-width:420px;align-items:center;margin-bottom:20px}
-  #nick{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
-  #nickColorWrapper{width:42px;height:42px;position:relative}
-  #nickColorCircle{width:100%;height:100%;border-radius:50%;border:2px solid #fff;cursor:pointer}
-  #createRoom{padding:14px 28px;border-radius:12px;background:var(--accent);color:#000;border:none;font-weight:700;cursor:pointer}
+#homeCenter{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:18px}
+#nickRow{display:flex;gap:12px;width:100%;max-width:420px;align-items:center;margin-bottom:20px}
+#nick{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
+#nick[readonly]{opacity:0.7}
+#nickColorWrapper{width:42px;height:42px;position:relative}
+#nickColorCircle{width:100%;height:100%;border-radius:50%;border:2px solid #fff;cursor:pointer}
+#createRoom{padding:14px 28px;border-radius:12px;background:var(--accent);color:#000;border:none;font-weight:700;cursor:pointer}
 
 /* MAIN chat */
-  #main{display:flex;flex-direction:column}
-  #header{height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117}
-  #header .left{display:flex;align-items:center;gap:8px}
-  #roomName{font-weight:700}
-  #chatWrapper{display:flex;flex:1;overflow:hidden;min-height:0}
-  #chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease;box-sizing:border-box;}
-  #chatSidebar.collapsed{width:40px;padding:6px}
-  #chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0}
-  #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
-  .message{display:flex;gap:10px;align-items:flex-start}
-  .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
-  .msg{background:var(--panel);padding:10px 14px;border-radius:12px;position:relative;max-width:90%}
-  .time{font-size:11px;color:var(--muted);margin-left:6px}
-  .reply-btn{position:absolute;right:8px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0}
-  .msg:hover .reply-btn{opacity:1}
-  .reply-preview{background:rgba(255,255,255,0.02);border-left:3px solid var(--accent);padding:6px;font-size:13px;margin-bottom:8px;border-radius:6px}
+#main{display:flex;flex-direction:column}
+#header{height:56px;background:var(--panel);display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #0d1117}
+#header .left{display:flex;align-items:center;gap:8px}
+#roomName{font-weight:700}
+#chatWrapper{display:flex;flex:1;overflow:hidden;min-height:0}
+#chatSidebar{width:var(--lobby-width);background:var(--panel);border-right:1px solid #0d1117;padding:8px;overflow:auto;transition:width 200ms ease;box-sizing:border-box;}
+#chatSidebar.collapsed{width:40px;padding:6px}
+#chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0}
+#chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
+.message{display:flex;gap:10px;align-items:flex-start}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
+.msg{background:var(--panel);padding:10px 14px;border-radius:12px;position:relative;max-width:90%}
+.time{font-size:11px;color:var(--muted);margin-left:6px}
+.reply-btn{position:absolute;right:8px;top:8px;font-size:12px;color:var(--muted);cursor:pointer;opacity:0}
+.msg:hover .reply-btn{opacity:1}
+.reply-preview{background:rgba(255,255,255,0.02);border-left:3px solid var(--accent);padding:6px;font-size:13px;margin-bottom:8px;border-radius:6px}
+
+/* typing indicator (between chat and input) */
+#typingIndicator{padding:6px 12px;color:var(--muted);font-size:13px;min-height:18px}
 
 /* input area */
-  #replyBox{display:none;background:var(--card);padding:8px 14px;font-size:13px;color:var(--text)}
-  #inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center}
-  #msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
-  #emojiPicker{display:none;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border-radius:8px;position:absolute;bottom:72px;left:12px;max-width:320px;max-height:200px;overflow:auto}
-  #emojiPicker div{cursor:pointer;font-size:18px}
-  #emojiBtn{border:none;background:transparent;color:var(--text);font-size:20px;cursor:pointer}
+#replyBox{display:none;background:var(--card);padding:8px 14px;font-size:13px;color:var(--text)}
+#inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center}
+#msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
+#emojiPicker{display:none;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border-radius:8px;position:absolute;bottom:72px;left:12px;max-width:320px;max-height:200px;overflow:auto}
+#emojiPicker div{cursor:pointer;font-size:18px}
+#emojiBtn{border:none;background:transparent;color:var(--text);font-size:20px;cursor:pointer}
 
 /* mobile specifics */
-  .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
-  .mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
-  .mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
-  .mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
-  #openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
+.mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
+.mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
+.mobile-lobby-drawer.show{transform:translateX(0);opacity:1}
+#openLobbyBtn{position:fixed;left:12px;bottom:12px;background:var(--accent);border:none;padding:12px;border-radius:999px;z-index:60;font-weight:800;color:#000;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
 
 /* collapsed small labels */
-  .collapsed .label-text{display:none}
-  .collapsed .room{padding:8px;border-radius:8px;text-align:center}
+.collapsed .label-text{display:none}
+.collapsed .room{padding:8px;border-radius:8px;text-align:center}
 
 /* responsive */
-  @media (max-width:900px){:root{--lobby-width:220px}}
-  @media (max-width:768px){
-    #home{flex-direction:column}
-    #homeLeft{display:none} /* desktop lobby hidden on mobile (we use drawer) */
-    #chatSidebar{display:none}
-    #header{padding:10px}
-    #nickRow{max-width:100%}
-  }
+@media (max-width:900px){:root{--lobby-width:220px}}
+@media (max-width:768px){
+#home{flex-direction:column}
+#homeLeft{display:none} /* desktop lobby hidden on mobile (we use drawer) */
+#chatSidebar{display:none}
+#header{padding:10px}
+#nickRow{max-width:100%}
+}
 
-  .fade{transition:opacity 180ms ease,transform 180ms ease}
-  button, .iconbtn{outline: none}
+.fade{transition:opacity 180ms ease,transform 180ms ease}
+button, .iconbtn{outline: none}
 </style>
+
 </head>
 <body>
 <div id="app">
 
+  <!-- SETTINGS GEAR -->
+  <button id="settingsBtn" title="Settings">⚙️</button>
+  <div id="settingsMenu" class="settings-menu" aria-hidden="true">
+    <button id="settingsLogout">Logout</button>
+    <button id="settingsDelete">Delete user</button>
+  </div>
+
   <!-- LOGIN -->
   <div id="login" aria-hidden="false">
-    <input id="loginUser" placeholder="Käyttäjänimi" autocomplete="username">
-    <input id="loginPass" type="password" placeholder="Salasana" autocomplete="current-password">
-    <button id="loginBtn">Kirjaudu / Rekisteröidy</button>
+    <input id="loginUser" placeholder="Username" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="loginBtn">Login / Register</button>
     <button id="demoBtn" class="small">Continue as Guest</button>
   </div>
 
   <!-- HOME -->
   <div id="home">
-    <button id="logoutBtn" title="Logout">Logout</button>
-
     <!-- Desktop lobby (keeps desktop visible) -->
     <aside id="homeLeft" aria-label="Lobby">
       <div id="lobbyHeader">
-        <div id="lobbyTitle">Huoneet</div>
+        <div id="lobbyTitle">Rooms</div>
         <div id="lobbyControls">
           <button id="lobbyToggle" class="iconbtn" title="Collapse/Expand lobby">◀</button>
           <button id="lobbySizeBtn" class="iconbtn" title="Change lobby size">A</button>
@@ -135,17 +151,18 @@
     <!-- Center -->
     <main id="homeCenter">
       <div id="nickRow">
-        <input id="nick" placeholder="Nimimerkki (tallennetaan)">
+        <input id="nick" placeholder="Nickname (saved)">
         <div id="nickColorWrapper">
-          <div id="nickColorCircle" title="Väri"></div>
+          <div id="nickColorCircle" title="Color"></div>
           <input type="color" id="nickColor" value="#58a6ff" style="position:absolute;opacity:0;left:0;top:0;width:100%;height:100%;">
         </div>
       </div>
-      <button id="createRoom">Luo / Liity huoneeseen</button>
+      <button id="createRoom">Create / Join Room</button>
       <div style="margin-top:16px;color:var(--muted);font-size:13px;text-align:center;max-width:420px">
-        Pyyhkäise reunasta avataksesi huonevalikon mobiilissa. Nyt sulkeutuminen avautuessa ja painettaessa on smooth.
+        Swipe from the edge to open the room drawer on mobile. Drawer open/close is smooth and fast.
       </div>
     </main>
+
   </div>
 
   <!-- MAIN CHAT -->
@@ -157,14 +174,14 @@
       </div>
       <div style="flex:1"></div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div id="typingIndicator" style="color:var(--muted);font-size:13px"></div>
+        <!-- header right area left intentionally empty, gear is fixed top-right -->
       </div>
     </div>
 
     <div id="chatWrapper">
       <aside id="chatSidebar" aria-label="Chat sidebar">
         <div id="chatRoomsHeader" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:700">Huoneet</div>
+          <div style="font-weight:700">Rooms</div>
           <button id="sidebarToggle" class="iconbtn" title="Collapse">◀</button>
         </div>
         <div id="roomListSidebar"></div>
@@ -172,28 +189,33 @@
 
       <div id="chatWrapperMain">
         <div id="chat"></div>
+
+        <!-- TYPING INDICATOR: appears between chat and input -->
+        <div id="typingIndicator" aria-live="polite"></div>
+
         <div id="replyBox"></div>
         <div id="inputBar">
           <button id="emojiBtn">😊</button>
-          <input id="msg" placeholder="Viesti... (/clear /delete)" autocomplete="off">
+          <input id="msg" placeholder="Message... (/clear /delete)" autocomplete="off">
           <div id="emojiPicker"></div>
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- Mobile overlay and drawer -->
   <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
   <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-weight:700">Huoneet</div>
+      <div style="font-weight:700">Rooms</div>
       <button id="closeDrawer" class="iconbtn">✕</button>
     </div>
     <div id="roomListMobile"></div>
   </div>
 
   <!-- Blue three-line button (mobile) -->
-  <button id="openLobbyBtn" title="Avaa lobby">☰</button>
+  <button id="openLobbyBtn" title="Open lobby">☰</button>
 
 </div>
 
@@ -201,9 +223,14 @@
 /* ===================
    App logic: drawer open/close smooth when tapping room (mobile),
    both-direction smooth animations, keyboard handling, desktop unchanged.
-   Fixed touchstart/drag logic so a tap on a room in the drawer doesn't
-   immediately trigger a drag/close and block joinRoom.
+
+   Modifications requested:
+   - Guest users cannot change their nickname.
+   - Typing indicator appears between chat and input area.
+   - Gear icon (top-right) opens a small settings dropdown with Logout and Delete User.
+   - All UI and texts translated to English.
    =================== */
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection,
@@ -227,7 +254,6 @@ const loginBtn = document.getElementById('loginBtn');
 const demoBtn = document.getElementById('demoBtn');
 const loginUser = document.getElementById('loginUser');
 const loginPass = document.getElementById('loginPass');
-const logoutBtn = document.getElementById('logoutBtn');
 
 const roomList = document.getElementById('roomList');
 const roomListSidebar = document.getElementById('roomListSidebar');
@@ -259,6 +285,11 @@ const emojiPicker = document.getElementById('emojiPicker');
 const emojiBtn = document.getElementById('emojiBtn');
 const typingIndicator = document.getElementById('typingIndicator');
 const back = document.getElementById('back');
+
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsMenu = document.getElementById('settingsMenu');
+const settingsLogout = document.getElementById('settingsLogout');
+const settingsDelete = document.getElementById('settingsDelete');
 
 let users = JSON.parse(localStorage.getItem('users')||'{}');
 let nick = '';
@@ -304,6 +335,7 @@ function showHome(){
   home.style.display = 'flex';
   main.style.display = 'none';
   updateOpenLobbyBtnVisibility();
+  updateNickEditable();
 }
 function showLogin(){
   login.style.display = 'flex';
@@ -311,24 +343,42 @@ function showLogin(){
   main.style.display = 'none';
   localStorage.removeItem('session');
   updateOpenLobbyBtnVisibility();
+  updateNickEditable();
 }
 function showMain(){
   login.style.display = 'none';
   home.style.display = 'none';
   main.style.display = 'flex';
   updateOpenLobbyBtnVisibility();
+  updateNickEditable();
 }
 
 /* restore session */
 if(localStorage.getItem('session')) showHome();
 else showLogin();
 
+/* update whether nickname is editable (guest cannot change) */
+function updateNickEditable(){
+  const session = localStorage.getItem('session') || '';
+  if(session.startsWith('Guest')){
+    nickInput.readOnly = true;
+    nickColorInput.disabled = true;
+    nickColorCircle.style.pointerEvents = 'none';
+    nickInput.title = "Guest name cannot be changed";
+  } else {
+    nickInput.readOnly = false;
+    nickColorInput.disabled = false;
+    nickColorCircle.style.pointerEvents = 'auto';
+    nickInput.title = "";
+  }
+}
+
 /* login */
 loginBtn.onclick = () => {
   const u = loginUser.value.trim();
   const p = loginPass.value;
-  if(!u||!p) return alert('Täytä molemmat kentät');
-  if(users[u] && users[u] !== p) return alert('Väärä salasana');
+  if(!u || !p) return alert('Please fill both fields');
+  if(users[u] && users[u] !== p) return alert('Incorrect password');
   users[u] = p;
   localStorage.setItem('users',JSON.stringify(users));
   localStorage.setItem('session',u);
@@ -343,10 +393,50 @@ demoBtn.onclick = () => {
   localStorage.setItem('nick', guest);
   showHome();
 };
-logoutBtn.onclick = ()=> { showLogin(); };
+
+/* SETTINGS menu (gear) */
+settingsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = settingsMenu.classList.toggle('show');
+  settingsMenu.setAttribute('aria-hidden', !open);
+});
+settingsMenu.addEventListener('click', (e) => e.stopPropagation());
+document.addEventListener('click', () => {
+  if(settingsMenu.classList.contains('show')){
+    settingsMenu.classList.remove('show');
+    settingsMenu.setAttribute('aria-hidden','true');
+  }
+});
+
+/* Logout via settings */
+settingsLogout.addEventListener('click', () => {
+  settingsMenu.classList.remove('show');
+  localStorage.removeItem('session');
+  showLogin();
+});
+
+/* Delete user via settings */
+settingsDelete.addEventListener('click', () => {
+  settingsMenu.classList.remove('show');
+  const session = localStorage.getItem('session');
+  if(!session){ alert('No logged-in user'); return; }
+  if(session.startsWith('Guest')){ alert('Guest account cannot be deleted.'); return; }
+  if(!confirm(`Delete user "${session}" and its saved credentials? This cannot be undone.`)) return;
+  try{
+    users = JSON.parse(localStorage.getItem('users')||'{}');
+    delete users[session];
+    localStorage.setItem('users', JSON.stringify(users));
+  }catch(e){}
+  localStorage.removeItem('session');
+  localStorage.removeItem('nick');
+  showLogin();
+});
 
 /* nick color */
-nickColorCircle.addEventListener('click', ()=> nickColorInput.click());
+nickColorCircle.addEventListener('click', ()=> {
+  if(nickColorInput.disabled) return;
+  nickColorInput.click();
+});
 nickColorInput.addEventListener('input', ()=>{
   nickColorCircle.style.background = nickColorInput.value;
   localStorage.setItem('nickColor', nickColorInput.value);
@@ -376,9 +466,9 @@ function renderRoomEntry(id){
 }
 
 /* create/join handlers */
-createRoomBtn.onclick = async ()=>{
-  const r = prompt('Huoneen nimi'); if(!r) return;
-  const p = prompt('Salasana (valinnainen)');
+createRoomBtn.onclick = async ()=> {
+  const r = prompt('Room name'); if(!r) return;
+  const p = prompt('Password (optional)');
   const ref = doc(db,'rooms',r);
   const snap = await getDoc(ref);
   if(!snap.exists()) await setDoc(ref,{password:p||'',created:serverTimestamp()});
@@ -389,9 +479,9 @@ createRoomBtn.onclick = async ()=>{
 async function joinRoom(r){
   const ref = doc(db,'rooms',r);
   const snap = await getDoc(ref);
-  if(!snap.exists()) return alert("Huonetta ei löydy");
-  const pass = prompt('Salasana');
-  if(pass !== snap.data().password) return alert('Väärä salasana');
+  if(!snap.exists()) return alert("Room not found");
+  const pass = prompt('Password');
+  if(pass !== snap.data().password) return alert('Incorrect room password');
 
   // Save nick/color
   nick = nickInput.value || ('Anon'+Math.floor(Math.random()*1000));
@@ -464,12 +554,12 @@ async function enterRoom(r){
   // typing snapshot
   typingUnsub = onSnapshot(collection(db,'rooms',room,'typing'), snap => {
     const now = Date.now();
-    const users = [];
+    const usersTyping = [];
     snap.forEach(d=>{
       const t = d.data().t?.toMillis?.() ?? d.data().t;
-      if(d.id !== nick && t && now - t < 2000) users.push(d.id);
+      if(d.id !== nick && t && now - t < 2000) usersTyping.push(d.id);
     });
-    typingIndicator.textContent = users.length ? users.join(', ') + ' kirjoittaa...' : '';
+    typingIndicator.textContent = usersTyping.length ? usersTyping.join(', ') + ' is typing...' : '';
   });
 }
 
@@ -492,7 +582,7 @@ chat.addEventListener('click', (e)=>{
   if(!b) return;
   replyTo = { name: b.dataset.name, text: b.dataset.text };
   replyBox.style.display = 'block';
-  replyBox.innerHTML = `Vastataan <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
+  replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
   document.getElementById('cancelReply').onclick = cancelReply;
 });
 function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
@@ -501,7 +591,7 @@ function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
 msg.addEventListener('keydown', async (e)=>{
   if(e.key !== 'Enter') return;
   const text = msg.value.trim(); msg.value = ''; if(!text) return;
-  if(!room){ alert('Et ole huoneessa'); return; }
+  if(!room){ alert('You are not in a room'); return; }
   deleteDoc(doc(db,'rooms',room,'typing',nick)).catch(()=>{});
 
   if(text === '/clear'){
@@ -510,7 +600,7 @@ msg.addEventListener('keydown', async (e)=>{
     return;
   }
   if(text === '/delete'){
-    if(!confirm('Poistetaanko koko huone?')) return;
+    if(!confirm('Delete the entire room?')) return;
     const msgs = await getDocs(collection(db,'rooms',room,'messages'));
     for(const d of msgs.docs) await deleteDoc(d.ref).catch(()=>{});
     await deleteDoc(doc(db,'rooms',room)).catch(()=>{});
@@ -544,12 +634,13 @@ emojiList.forEach(e=>{
 emojiBtn.onclick = ()=> emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
 
 /* back button */
-back.onclick = ()=> {
+back.onclick = ()=>{
   if(messagesUnsub) messagesUnsub();
   if(typingUnsub) typingUnsub();
   showHome();
   room = '';
   chat.innerHTML = '';
+  typingIndicator.textContent = '';
 };
 
 /* lobby size (kept) */
@@ -632,7 +723,7 @@ const EDGE_ZONE = 36;
 const SHORT_THRESHOLD = 30;
 const VELOCITY_THRESHOLD = 0.35;
 
-/* We change the touch logic: do NOT begin dragging immediately on touchstart.
+/* touchstart/drag logic: do NOT begin dragging immediately on touchstart.
    Instead, record potential drag and only start the drag if user moves horizontally
    beyond a small threshold. This avoids treating simple taps inside the drawer as drags. */
 let touchStarted = false;
@@ -680,8 +771,9 @@ function endDrag(){
   const matrix = style.transform;
   if(matrix && matrix !== 'none'){
     try{
-      const values = matrix.match(/matrix.*\((.+)\)/)[1].split(', ');
-      translateX = parseFloat(values[4]);
+      // fallback parsing
+      const m = mobileDrawer.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
+      translateX = m ? parseFloat(m[1]) : 0;
     }catch(e){ translateX = 0; }
   } else {
     const m = mobileDrawer.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
@@ -716,9 +808,7 @@ function endDrag(){
   mobileDrawer.style.willChange = '';
 }
 
-/* touch handlers for drag
-   Updated: only start dragging after a small horizontal move threshold to avoid
-   interfering with tap/click events inside the drawer (like tapping a room). */
+/* touch handlers for drag */
 document.addEventListener('touchstart', (e)=>{
   if(!isMobile) return;
   const t = e.touches[0];
@@ -844,6 +934,9 @@ if(isMobile){
 document.addEventListener('visibilitychange', ()=> {
   if(!document.hidden) lastMessageTime = Date.now();
 });
+
+/* ensure nick editability on load */
+updateNickEditable();
 
 </script>
 </body>
