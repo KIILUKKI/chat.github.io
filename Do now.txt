@@ -14,6 +14,8 @@ Linkki ominaisuus eli ei tarvitse kopoida linkkiä vaan suoraan sitä painamalla
 
 GIF picker - siihen sen saman kuin emori picker oma tabinsa gifeille.
 
+Jos hoveraa chat viestin päälle (ei oman) saa tiedon ketkä ovat nähneet sen.
+
 Komennot:
 /roll
 → Nick rolled 🎲 4
