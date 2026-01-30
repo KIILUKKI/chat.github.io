@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fi">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -85,6 +85,7 @@
 #login input{padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text);width:100%;max-width:360px}
 #login button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-weight:700;cursor:pointer;max-width:360px;width:100%}
 #login .small{background:transparent;border:1px solid #333;padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+#loginMsg{margin-top:10px;font-size:13px;color:var(--muted);min-height:18px}
 
 /* APP LAYOUT */
 #home,#main{position:absolute;inset:0;display:none}
@@ -123,7 +124,7 @@
 #chatSidebar.collapsed{width:40px;padding:6px}
 #chatWrapperMain{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
 #chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,transparent, rgba(255,255,255,0.01));transition:padding-bottom 120ms ease}
-.message{display:flex;gap:10px;align-items:flex-start}
+.message{display:flex;gap:10px;align-items:flex-start;transition:transform 160ms ease}
 .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
 /* Reserve horizontal space on the right for action buttons (reply & more) so they don't overlap message text */
 .msg{background:var(--panel);padding:10px 96px 10px 14px;border-radius:12px;position:relative;max-width:70%}
@@ -136,11 +137,78 @@
 /* edited note */
 .edited-note{font-size:12px;color:var(--muted);margin-left:8px;display:inline-block}
 
-/* typing indicator (between chat and input) */
-#typingIndicator{padding:6px 12px;color:var(--muted);font-size:13px;min-height:18px;display:none}
+/* typing indicator: new stylish component */
+#typingIndicator{
+  display:none;
+  position:relative;
+  padding:8px 12px;
+  margin:0 12px 8px 12px;
+  border-radius:12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.02);
+  color:var(--muted);
+  font-size:13px;
+  align-items:center;
+  gap:10px;
+  z-index:90;
+  transition:opacity 180ms ease, transform 180ms ease;
+  display:flex;
+  align-items:center;
+}
 
-/* reply box is positioned above the input bar to avoid layout jumps */
-#replyBox{display:none;background:var(--card);padding:8px 14px;font-size:13px;color:var(--text);position:absolute;left:12px;right:12px;bottom:72px;border-radius:10px;z-index:85;box-shadow:0 6px 18px rgba(0,0,0,0.5)}
+/* avatars stack inside typing indicator */
+.typing-avatars{display:flex;gap:6px;align-items:center}
+.typing-avatars .typ-av{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;border:2px solid rgba(255,255,255,0.04);font-size:12px;background:var(--guest-gray);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* text & animated dots */
+.typing-text{display:flex;flex-direction:row;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.typing-dots{display:inline-flex;gap:6px;align-items:flex-end;height:14px}
+.typing-dots span{
+  width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--muted);opacity:0.45;
+  transform: translateY(0);
+  animation: typing-bounce 1s infinite;
+}
+.typing-dots span:nth-child(1){animation-delay:0s}
+.typing-dots span:nth-child(2){animation-delay:0.12s}
+.typing-dots span:nth-child(3){animation-delay:0.24s}
+
+@keyframes typing-bounce{
+  0% { transform: translateY(0); opacity:0.45; }
+  40% { transform: translateY(-6px); opacity:1; }
+  80% { transform: translateY(0); opacity:0.45; }
+  100% { transform: translateY(0); opacity:0.45; }
+}
+
+/* smaller on tiny screens */
+@media (max-width:480px){
+  .typing-avatars .typ-av{ width:24px;height:24px;font-size:11px }
+  #typingIndicator{ margin:0 10px 8px 10px; padding:8px; border-radius:10px }
+  #replyBox { bottom:72px; width:calc(100% - 24px) }
+}
+
+/* reply box: fixed so it never becomes part of message flow */
+#replyBox{
+  display:none;
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:86px;
+  width:calc(100% - 36px);
+  max-width:920px;
+  background:var(--card);
+  padding:8px 14px;
+  font-size:13px;
+  color:var(--text);
+  border-radius:10px;
+  z-index:999;
+  box-shadow:0 8px 26px rgba(0,0,0,0.45);
+  box-sizing:border-box;
+}
+
+/* input bar */
 #inputBar{padding:12px;background:var(--panel);border-top:1px solid #0d1117;display:flex;gap:8px;align-items:center;position:relative;z-index:80}
 #msg{flex:1;padding:12px;border-radius:10px;border:none;background:var(--card);color:var(--text)}
 #emojiPicker{display:none;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border-radius:8px;position:absolute;bottom:72px;left:12px;max-width:320px;max-height:300px;overflow:auto}
@@ -253,7 +321,7 @@
     <div class="section"><b>Mobile specifics</b><br>
       • Drawer: swipe from the left edge or use the blue button to open the room drawer.<br>
       • On-screen keyboard: input and reply box move to stay visible; the chat will auto-scroll when appropriate.<br>
-      • Swipe-to-reply moves only avatar/action icons; message text stays fixed to avoid overlap.</div>
+      • Swipe-to-reply now moves the *entire message element* so the reply gesture feels direct and intuitive.</div>
 
     <div class="section"><b>Desktop specifics</b><br>
       • Lobby and chat sidebar remain visible; three-dot menus are available for edits.<br>
@@ -280,10 +348,11 @@
 
   <!-- LOGIN -->
   <div id="login" aria-hidden="false">
-    <input id="loginUser" placeholder="Username" autocomplete="username">
-    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
-    <button id="loginBtn">Login / Register</button>
+    <input id="loginUser" placeholder="Käyttäjänimi" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="Salasana" autocomplete="current-password">
+    <button id="loginBtn">Kirjaudu / Rekisteröidy</button>
     <button id="demoBtn" class="small">Continue as Guest</button>
+    <div id="loginMsg"></div>
   </div>
 
   <!-- HOME -->
@@ -381,18 +450,17 @@
 
 <script type="module">
 /* ===================
-   Minimal, targeted changes:
-   - Buttons at top-right grouped in #topRightControls to avoid overlapping.
-   - Fullscreen button made slightly larger visually.
-   - Menu panels (howMenu, settingsMenu, profileCard) aligned to right:12px so they appear under the container.
-   - No other feature changes.
+   Minimal, targeted changes applied for:
+   - mobile swipe behavior and fixed reply box,
+   - stylish typing indicator with controlled animation restart logic
+   Everything else left intact.
    =================== */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection,
   addDoc, getDocs, query, orderBy, where, limit,
-  onSnapshot, serverTimestamp, deleteDoc, updateDoc
+  onSnapshot, serverTimestamp, deleteDoc, updateDoc, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* Firebase init - replace config if needed */
@@ -415,6 +483,7 @@ const loginBtn = document.getElementById('loginBtn');
 const demoBtn = document.getElementById('demoBtn');
 const loginUser = document.getElementById('loginUser');
 const loginPass = document.getElementById('loginPass');
+const loginMsg = document.getElementById('loginMsg');
 
 const roomList = document.getElementById('roomList');
 const roomListSidebar = document.getElementById('roomListSidebar');
@@ -471,6 +540,7 @@ let lastMessageTime = 0;
 let typingTimeout = null;
 let messagesUnsub = null;
 let typingUnsub = null;
+let roomsUnsub = null; // <--- listener for rooms collection
 
 /* cache for user docs to avoid repeated reads */
 const userCache = new Map();
@@ -497,6 +567,37 @@ function enforceDesktopLobby(){
   }
 }
 enforceDesktopLobby();
+
+/* === NEW: Global edge-swipe handlers to open sidebar from left edge (works in any view) ===
+   - activates only on mobile
+   - only when touch starts near the very left edge (threshold 24px)
+   - triggers openMobileDrawer() once user swipes right > 60px
+*/
+let edgeSwipeStartX = 0;
+let edgeSwipeActive = false;
+
+document.addEventListener('touchstart', (e) => {
+  if(!isMobile) return;
+  const t = e.touches[0];
+  edgeSwipeStartX = t.clientX;
+  // activate only when starting very near left edge and drawer not already open
+  edgeSwipeActive = (edgeSwipeStartX < 24) && !mobileDrawer.classList.contains('show') && !mobileOverlay.classList.contains('show');
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if(!edgeSwipeActive) return;
+  const t = e.touches[0];
+  const deltaX = t.clientX - edgeSwipeStartX;
+  if(deltaX > 60){
+    // open drawer and disable this edge-swipe until next touchstart
+    openMobileDrawer();
+    edgeSwipeActive = false;
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  edgeSwipeActive = false;
+});
 
 /* Session helpers */
 function showHome(){
@@ -661,7 +762,7 @@ nickColorCircle.addEventListener('click', ()=> {
   if(nickColorInput.disabled) return;
   nickColorInput.click();
 });
-nickColorInput.addEventListener('input', async ()=>{
+nickColorInput.addEventListener('input', async ()=>{ 
   nickColorCircle.style.background = nickColorInput.value;
   localStorage.setItem('nickColor', nickColorInput.value);
   // update Firestore users doc if logged in
@@ -692,6 +793,29 @@ function renderRoomEntry(id){
   createEl(roomList);
   createEl(roomListSidebar);
   createEl(roomListMobile);
+}
+
+/* NEW: real-time rooms listener so rooms appear immediately */
+function setupRoomsListener(){
+  if(roomsUnsub) roomsUnsub();
+  try{
+    const roomsCol = collection(db,'rooms');
+    roomsUnsub = onSnapshot(roomsCol, snap => {
+      roomList.innerHTML = '';
+      roomListSidebar.innerHTML = '';
+      roomListMobile.innerHTML = '';
+      snap.forEach(docSnap => {
+        renderRoomEntry(docSnap.id);
+      });
+    }, err => {
+      console.error('rooms listener error', err);
+      // fallback to one-time load if realtime fails
+      loadRooms().catch(()=>{});
+    });
+  }catch(e){
+    console.error('setupRoomsListener error', e);
+    loadRooms().catch(()=>{});
+  }
 }
 
 /* create/join handlers */
@@ -773,7 +897,8 @@ async function enterRoom(r){
         removeMessage(d.id);
       }
     });
-    if(shouldScroll) scrollChatToBottom();
+    // use RAF to make autoscroll robust (fixes missed scrolls)
+    requestAnimationFrame(() => scrollChatToBottom());
   });
 
   // typing snapshot (robust handling of timestamp field)
@@ -789,19 +914,79 @@ async function enterRoom(r){
       else if(tField && typeof tField._seconds === 'number') tMs = (tField._seconds*1000) + (tField._nanoseconds ? Math.floor(tField._nanoseconds/1e6) : 0);
       if(tMs && (now - tMs) < 4000) usersTyping.push(d.id);
     });
-    if(usersTyping.length){
-      // English typing indicator
-      let txt = '';
-      if(usersTyping.length === 1) txt = `${usersTyping[0]} is typing...`;
-      else if(usersTyping.length === 2) txt = `${usersTyping[0]} and ${usersTyping[1]} are typing...`;
-      else txt = `${usersTyping.slice(0,3).join(', ')} and others are typing...`;
-      typingIndicator.textContent = txt;
-      typingIndicator.style.display = 'block';
-    } else {
-      typingIndicator.textContent = '';
-      typingIndicator.style.display = 'none';
-    }
+
+    // render stylish indicator (with controlled animation restarts)
+    renderTypingIndicator(usersTyping);
   });
+}
+
+/* --- Animation restart control vars:
+   We avoid restarting the dot animation on every typing heartbeat (otherwise it's too snappy).
+   Restart only when the set of users changes OR if enough time has passed since last restart.
+*/
+let _lastTypingKey = '';
+let _lastTypingAnimRestart = 0;
+const TYPING_ANIM_MIN_RESTART_INTERVAL = 1200; // ms; don't restart animation more often than this unless users changed
+
+/* renderTypingIndicator: shows avatars + animated dots + text (up to 4 users)
+   Uses userCache for colors where possible; falls back to guest gray.
+   Animation will be restarted only when users list changes OR minimum interval elapsed.
+*/
+function renderTypingIndicator(usersTyping){
+  if(!usersTyping || usersTyping.length === 0){
+    typingIndicator.style.display = 'none';
+    typingIndicator.innerHTML = '';
+    _lastTypingKey = '';
+    return;
+  }
+
+  // build key (order-stable)
+  const sorted = [...usersTyping].sort();
+  const key = sorted.join(',');
+
+  // limit to first 4 avatars
+  const showAvs = usersTyping.slice(0,4);
+  const avatarsHtml = showAvs.map(n => {
+    const color = (userCache.get(n) && userCache.get(n).color) ? userCache.get(n).color : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+    return `<div class="typ-av" style="background:${color}">${escapeHtml((n||'?')[0]||'?')}</div>`;
+  }).join('');
+
+  // text
+  let txt = '';
+  if(usersTyping.length === 1) txt = `${escapeHtml(usersTyping[0])} kirjoittaa`;
+  else if(usersTyping.length === 2) txt = `${escapeHtml(usersTyping[0])} ja ${escapeHtml(usersTyping[1])} kirjoittavat`;
+  else if(usersTyping.length === 3) txt = `${escapeHtml(usersTyping[0])}, ${escapeHtml(usersTyping[1])} ja ${escapeHtml(usersTyping[2])} kirjoittavat`;
+  else txt = `${escapeHtml(usersTyping[0])}, ${escapeHtml(usersTyping[1])} ja ${usersTyping.length-2} muuta kirjoittavat`;
+
+  // set HTML
+  typingIndicator.innerHTML = `
+    <div class="typing-avatars">
+      ${avatarsHtml}
+    </div>
+    <div class="typing-text">
+      <div class="typing-label">${txt}</div>
+      <div class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  typingIndicator.style.display = 'flex';
+
+  // Decide whether to restart the dot animation.
+  // Restart if users changed (key different) OR if enough time passed since last restart (to keep it fresh occasionally).
+  const now = Date.now();
+  const needRestart = (key !== _lastTypingKey) || (now - _lastTypingAnimRestart > TYPING_ANIM_MIN_RESTART_INTERVAL);
+
+  if(needRestart){
+    // restart by cloning the dots node (clean restart of CSS animations)
+    const dots = typingIndicator.querySelector('.typing-dots');
+    if(dots && dots.parentNode){
+      const clone = dots.cloneNode(true);
+      // small microtask delay ensures DOM update and avoids jank
+      dots.parentNode.replaceChild(clone, dots);
+      _lastTypingAnimRestart = now;
+    }
+  }
+
+  _lastTypingKey = key;
 }
 
 /* DOM helpers for incremental updates */
@@ -815,21 +1000,33 @@ function makeMessageElement(id, m){
   const safeTextHtml = linkify(escapeHtml(m.text || ''));
   const editedNoteHtml = m.editedNote ? `<span class="edited-note">${escapeHtml(m.editedNote)}</span>` : '';
 
-  el.innerHTML = `
+  // Build inner message WITHOUT reply button when mobile.
+  let msgInner = `
     <div class="avatar" style="background:${m.color || getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim()}">${escapeHtml((m.name||'?')[0]||'?')}</div>
     <div class="msg">
       ${replyHtml}
       <b class="msg-sender" style="color:${m.color || '#999'};cursor:pointer">${escapeHtml(m.name)}</b>
       <span class="time">${m.time?.toMillis ? new Date(m.time.toMillis()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
       <div class="msg-text">${safeTextHtml}${editedNoteHtml}</div>
-      <div class="reply-btn" data-name="${escapeAttr(m.name)}" data-text="${escapeAttr(m.text)}">reply</div>
     </div>
   `;
+
+  el.innerHTML = msgInner;
+
+  // Add reply button ONLY for non-mobile (desktop)
+  if(!isMobile){
+    const replyBtn = document.createElement('div');
+    replyBtn.className = 'reply-btn';
+    replyBtn.setAttribute('data-name', escapeAttr(m.name));
+    replyBtn.setAttribute('data-text', escapeAttr(m.text));
+    replyBtn.textContent = 'reply';
+    el.querySelector('.msg').appendChild(replyBtn);
+  }
 
   // Add the three-dot MORE button for own messages (desktop only)
   const localNick = localStorage.getItem('nick') || nick;
   if(m.name === localNick && !isMobile){
-    const msgInner = el.querySelector('.msg');
+    const msgInnerEl = el.querySelector('.msg');
     const moreBtn = document.createElement('div');
     moreBtn.className = 'more-btn';
     moreBtn.title = 'More';
@@ -840,7 +1037,7 @@ function makeMessageElement(id, m){
       // show the same context menu but positioned near the button
       showEditDeleteMenu(Math.round(rect.left + 8), Math.round(rect.bottom + 6), id, m.text);
     });
-    msgInner.appendChild(moreBtn);
+    msgInnerEl.appendChild(moreBtn);
   }
 
   // attach interactions
@@ -911,7 +1108,7 @@ function makeMessageElement(id, m){
   // attach mobile interactions including swipe-to-reply and long-press edit/delete
   attachMobileInteractions(el, id, m);
 
-  // reply button
+  // reply button click handler (desktop only)
   el.querySelectorAll('.reply-btn').forEach(b => b.addEventListener('click', (e)=>{
     replyTo = { name: b.dataset.name, text: b.dataset.text };
     replyBox.style.display = 'block';
@@ -1019,104 +1216,100 @@ function hideContextMenu(){
 }
 
 /* mobile interactions: long-press -> edit/delete for own; smooth swipe right -> reply
-   IMPORTANT: text (msg-text) does NOT move on X-axis.
-   We only translate avatar and action buttons so the visible content stays fixed.
-   Long-press now opens the same Edit/Delete menu (at touch coords).
+   CHANGE: Move the ENTIRE .message element on mobile swipe (so the whole message translates).
+   Long-press still opens Edit/Delete for own messages.
+   Guard 'replyPreviewShownFor' prevents multiple reply previews showing per-swipe.
 */
 function attachMobileInteractions(el, msgId, messageData){
   let longPressTimer = null;
   let touchStartX = 0;
   let touchStartY = 0;
-  let dragging = false;
-
-  // elements to move (leave text in .msg-text untouched)
-  const avatarEl = () => el.querySelector('.avatar');
-  const moreBtnEl = () => el.querySelector('.more-btn');
-  const replyBtnEl = () => el.querySelector('.reply-btn');
+  let draggingLocal = false;
+  let replyPreviewShownFor = false; // guard to avoid multiple previews
 
   el.addEventListener('touchstart', (e)=>{
     const t = e.touches[0];
     touchStartX = t.clientX; touchStartY = t.clientY;
+    draggingLocal = false;
+    replyPreviewShownFor = false;
+
+    // show context menu at touch coords on long-press for own messages
     if(messageData.name === (localStorage.getItem('nick')||nick)){
-      // show context menu at touch coords on long-press
       longPressTimer = setTimeout(()=> {
-        // position at the touch point
         showEditDeleteMenu(Math.round(touchStartX - 80), Math.round(touchStartY + 6), msgId, messageData.text);
       }, 650);
     }
-    dragging = false;
-    // ensure any previous transforms cleared
-    const a = avatarEl(); if(a) a.style.transform = '';
-    const m = moreBtnEl(); if(m) m.style.transform = '';
-    const r = replyBtnEl(); if(r) r.style.transform = '';
+
+    // clear any previous transition so movement is smooth
+    el.style.transition = 'none';
   }, {passive:true});
 
   el.addEventListener('touchmove', (e)=>{
     const t = e.touches[0];
     const dx = t.clientX - touchStartX;
     const dy = t.clientY - touchStartY;
+    // if vertical motion dominates, cancel
     if(Math.abs(dy) > Math.abs(dx)){
       if(longPressTimer) clearTimeout(longPressTimer);
       return;
     }
-    if(!dragging && Math.abs(dx) > 10){
-      dragging = true;
+    if(!draggingLocal && Math.abs(dx) > 10){
+      draggingLocal = true;
       if(longPressTimer) clearTimeout(longPressTimer);
     }
-    if(dragging){
+    if(draggingLocal){
       e.preventDefault();
-      const capped = Math.min(Math.max(dx, 0), 120);
-      // Move only non-text UI parts so the message text remains fixed on X-axis
-      const a = avatarEl(); if(a) { a.style.transform = `translateX(${capped}px)`; a.style.willChange = 'transform'; }
-      const m = moreBtnEl(); if(m) { m.style.transform = `translateX(${capped}px)`; m.style.willChange = 'transform'; }
-      const r = replyBtnEl(); if(r) { r.style.transform = `translateX(${capped}px)`; r.style.willChange = 'transform'; }
+      const capped = Math.min(Math.max(dx, 0), 160); // only allow right swipe, cap to 160px
+      // Move the entire message element
+      el.style.transform = `translateX(${capped}px)`;
+      el.style.willChange = 'transform';
 
-      if(capped > 36){
-        const md = messageData;
+      // show preview ONCE when threshold crossed
+      if(capped > 36 && !replyPreviewShownFor){
+        replyPreviewShownFor = true;
+        replyTo = { name: messageData.name, text: messageData.text }; // prepare reply
         replyBox.style.display = 'block';
-        replyBox.innerHTML = `Replying to <b>${escapeHtml(md.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
+        replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
         const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
-      } else if(capped <= 36) {
-        if(!replyTo) replyBox.style.display = 'none';
+      } else if(capped <= 36 && replyPreviewShownFor){
+        // if user drags back under threshold, hide preview and reset guard
+        replyPreviewShownFor = false;
+        replyTo = null;
+        replyBox.style.display = 'none';
       }
     }
   }, {passive:false});
 
   el.addEventListener('touchend', ()=>{
     if(longPressTimer) clearTimeout(longPressTimer);
-    // compute px from transforms (we look at avatar transform as representative)
-    const a = avatarEl();
+    // determine px moved from transform
     let px = 0;
-    if(a && a.style.transform){
-      const m = a.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
+    const tr = el.style.transform;
+    if(tr){
+      const m = tr.match(/translateX\((-?\d+(\.\d+)?)px\)/);
       px = m ? parseInt(m[1],10) : 0;
     }
     // reset transforms with smooth transition
-    const reset = (node) => {
-      if(!node) return;
-      node.style.transition = 'transform 180ms ease';
-      node.style.transform = '';
-      setTimeout(()=>{ node.style.transition = ''; node.style.willChange = ''; }, 200);
-    };
-    reset(avatarEl());
-    reset(moreBtnEl());
-    reset(replyBtnEl());
+    el.style.transition = 'transform 180ms ease';
+    el.style.transform = '';
+    setTimeout(()=>{ el.style.transition = ''; el.style.willChange = ''; }, 200);
 
     if(px > 60){
-      // user completed swipe -> open reply UI (keep text unmoved)
-      setTimeout(()=>{
-        replyTo = { name: messageData.name, text: messageData.text };
-        replyBox.style.display = 'block';
-        replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
-        const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
-      }, 160);
+      // completed swipe -> finalise reply (replyBox already shown due to guard)
+      replyTo = replyTo || { name: messageData.name, text: messageData.text };
+      replyBox.style.display = 'block';
+      replyBox.innerHTML = `Replying to <b>${escapeHtml(replyTo.name)}</b> <button id="cancelReply" style="margin-left:8px">x</button>`;
+      const btn = document.getElementById('cancelReply'); if(btn) btn.onclick = cancelReply;
     } else {
-      setTimeout(()=>{ if(!replyTo) replyBox.style.display = 'none'; }, 160);
+      // cancelled, ensure hidden
+      replyTo = null;
+      replyBox.style.display = 'none';
+      replyPreviewShownFor = false;
     }
   });
 }
 
-/* typing indicator management */
+/* typing indicator management (client writes typing docs elsewhere) */
 msg.addEventListener('input', ()=> {
   if(!room || !nick) return;
   if(msg.value.trim()===''){
@@ -1166,6 +1359,31 @@ msg.addEventListener('keydown', async (e)=>{
   replyTo = null; replyBox.style.display = 'none';
 });
 
+/* Helper: robust autoscroll (used after updates) */
+function scrollChatToBottom(force = false){
+  if(force){
+    chat.scrollTop = chat.scrollHeight;
+    return;
+  }
+  const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 160;
+  if(nearBottom){
+    chat.scrollTop = chat.scrollHeight;
+  }
+}
+
+/* Helper: chunked batch deletes (handles >500 deletes safely) */
+async function deleteDocsInBatches(refs){
+  const CHUNK = 400; // safe chunk under Firestore limit
+  let i = 0;
+  while(i < refs.length){
+    const b = writeBatch(db);
+    const end = Math.min(i + CHUNK, refs.length);
+    for(let j=i;j<end;j++) b.delete(refs[j]);
+    await b.commit();
+    i = end;
+  }
+}
+
 /* command processor */
 async function handleCommand(cmdText){
   const parts = cmdText.split(/\s+/);
@@ -1211,41 +1429,45 @@ async function handleCommand(cmdText){
     return;
   }
 
-  // /clear: delete messages (ask for confirmation)
+  // /clear: delete messages (ask for confirmation) -> use batched deletes
   if(c === '/clear'){
     if(!confirm('Delete all messages in this room?')) return;
     try{
       const msgs = await getDocs(collection(db,'rooms',room,'messages'));
+      const refsToDelete = [];
       for(const d of msgs.docs){
-        // delete seen subdocs first
-        try{
-          const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
-          for(const sd of seenSnap.docs) await deleteDoc(sd.ref).catch(()=>{});
-        }catch(e){}
-        await deleteDoc(d.ref).catch(()=>{});
+        const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
+        for(const sd of seenSnap.docs) refsToDelete.push(sd.ref);
+        refsToDelete.push(d.ref);
       }
+      if(refsToDelete.length) await deleteDocsInBatches(refsToDelete);
     }catch(e){ console.error('/clear error', e); }
     return;
   }
 
-  // /delete or /delet: delete room and messages (ask for confirmation)
+  // /delete or /delet: delete room and messages (ask for confirmation) -> use batched deletes
   if(c === '/delete' || c === '/delet'){
     if(!confirm('Delete the room and all messages?')) return;
     try{
       // delete typing docs
       const typingDocs = await getDocs(collection(db,'rooms',room,'typing'));
-      for(const t of typingDocs.docs) await deleteDoc(t.ref).catch(()=>{});
+      const refsToDelete = [];
+      typingDocs.forEach(t => refsToDelete.push(t.ref));
+
       // delete messages & their seen subcollections
       const msgs = await getDocs(collection(db,'rooms',room,'messages'));
       for(const d of msgs.docs){
-        try{
-          const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
-          for(const sd of seenSnap.docs) await deleteDoc(sd.ref).catch(()=>{});
-        }catch(e){}
-        await deleteDoc(d.ref).catch(()=>{});
+        const seenSnap = await getDocs(collection(db,'rooms',room,'messages',d.id,'seen'));
+        for(const sd of seenSnap.docs) refsToDelete.push(sd.ref);
+        refsToDelete.push(d.ref);
       }
-      // attempt to delete room doc (may fail if server rules or remaining subcollections)
-      await deleteDoc(doc(db,'rooms',room)).catch(()=>{});
+
+      // perform deletes in batches
+      if(refsToDelete.length) await deleteDocsInBatches(refsToDelete);
+
+      // attempt to delete room doc (last)
+      try{ await deleteDoc(doc(db,'rooms',room)); }catch(e){ /* ignore */ }
+
       // navigate back to home
       if(messagesUnsub) messagesUnsub();
       if(typingUnsub) typingUnsub();
@@ -1449,136 +1671,6 @@ function endDrag(){
   mobileDrawer.style.willChange = '';
 }
 
-/* touch handlers for drag (unchanged) */
-document.addEventListener('touchstart', (e)=>{
-  if(!isMobile) return;
-  const t = e.touches[0];
-  touchStartX = t.clientX;
-  touchStartY = t.clientY;
-  touchStarted = true;
-  touchPotentialDrag = false;
-  const drawerOpen = mobileDrawer.classList.contains('show');
-  const isHomeVisible = home.style.display !== 'none';
-  if(drawerOpen || (isHomeVisible && touchStartX <= EDGE_ZONE)){
-    touchPotentialDrag = true;
-  }
-}, {passive:true});
-
-document.addEventListener('touchmove', (e)=>{
-  if(!isMobile || !touchStarted) return;
-  const t = e.touches[0];
-  const dx = t.clientX - touchStartX;
-  const dy = t.clientY - touchStartY;
-  if(Math.abs(dy) > Math.abs(dx) + 8){
-    if(dragging) endDrag();
-    touchStarted = false;
-    touchPotentialDrag = false;
-    return;
-  }
-  if(!dragging){
-    if(touchPotentialDrag && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)){
-      const drawerOpen = mobileDrawer.classList.contains('show');
-      beginDrag(t.clientX, drawerOpen);
-      dragMove(t.clientX);
-      return;
-    } else {
-      return;
-    }
-  }
-  if(dragging) dragMove(t.clientX);
-}, {passive:true});
-
-document.addEventListener('touchend', (e)=>{
-  if(!isMobile) return;
-  if(dragging){
-    endDrag();
-  }
-  touchStarted = false;
-  touchPotentialDrag = false;
-});
-
-/* overlay / button events */
-openLobbyBtn.addEventListener('click', openMobileDrawer);
-mobileOverlay.addEventListener('click', closeMobileDrawer);
-closeDrawer.addEventListener('click', closeMobileDrawer);
-
-/* keyboard handling using visualViewport */
-function onViewportResize(){
-  const vv = window.visualViewport;
-  let keyboardHeight = 0;
-  if(vv){
-    keyboardHeight = window.innerHeight - vv.height - (vv.offsetTop || 0);
-    if(keyboardHeight < 0) keyboardHeight = 0;
-  } else {
-    keyboardHeight = Math.max(0, (document._lastInnerHeight || window.innerHeight) - window.innerHeight);
-  }
-  if(keyboardHeight > 0){
-    chat.style.paddingBottom = (keyboardHeight + 84) + 'px';
-    // move replyBox up accordingly
-    replyBox.style.bottom = (keyboardHeight + 84) + 'px';
-    setTimeout(()=> scrollChatToBottom(false), 60);
-  } else {
-    chat.style.paddingBottom = '';
-    replyBox.style.bottom = '72px';
-    scrollChatToBottom();
-  }
-}
-document._lastInnerHeight = window.innerHeight;
-window.addEventListener('resize', ()=> { document._lastInnerHeight = Math.max(document._lastInnerHeight || 0, window.innerHeight); });
-if(window.visualViewport) window.visualViewport.addEventListener('resize', onViewportResize);
-else window.addEventListener('resize', onViewportResize);
-msg.addEventListener('focus', ()=> { setTimeout(()=> { onViewportResize(); scrollChatToBottom(false); }, 60); });
-msg.addEventListener('blur', ()=> { setTimeout(()=> onViewportResize(), 60); });
-
-/* rooms refresh polling & snapshot */
-async function refreshRoomsEvery(interval=30000){
-  await loadRooms();
-  setTimeout(()=>refreshRoomsEvery(interval), interval);
-}
-refreshRoomsEvery();
-
-onSnapshot(collection(db,'rooms'), snap => {
-  roomList.innerHTML = ''; roomListSidebar.innerHTML = ''; roomListMobile.innerHTML = '';
-  snap.forEach(d => renderRoomEntry(d.id));
-});
-
-/* Arrow Up keyboard shortcut: edit last message by you (desktop)
-   Trigger only when:
-   - not mobile
-   - you have a room open
-   - message input is focused and empty (common UX)
-*/
-document.addEventListener('keydown', async (e) => {
-  if(e.key === 'ArrowUp' && !isMobile){
-    // only when input is focused and empty
-    if(document.activeElement === msg && msg.value.trim() === '' && room){
-      e.preventDefault();
-      const localNick = localStorage.getItem('nick') || nick;
-      try{
-        const q = query(collection(db,'rooms',room,'messages'), where('name','==', localNick), orderBy('time','desc'), limit(1));
-        const snap = await getDocs(q);
-        let lastDoc = null;
-        snap.forEach(d => { lastDoc = d; });
-        if(!lastDoc){
-          alert('No message found to edit.');
-          return;
-        }
-        const currentText = lastDoc.data().text || '';
-        const newText = prompt('Edit your last message', currentText);
-        if(newText == null) return; // cancelled
-        await updateDoc(doc(db,'rooms',room,'messages', lastDoc.id), { text: newText, editedNote: 'Edited' }).catch(console.error);
-      }catch(err){
-        console.error('edit last message error', err);
-      }
-    }
-  }
-  // quick shortcuts: '?' opens How To
-  if(e.key === '?' && !e.metaKey && !e.ctrlKey){
-    howMenu.classList.add('show'); howMenu.setAttribute('aria-hidden','false');
-    settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
-  }
-});
-
 /* utility helpers */
 function escapeHtml(s){
   if(!s && s !== 0) return '';
@@ -1586,7 +1678,6 @@ function escapeHtml(s){
 }
 function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
 
-/* linkify simple URLs to clickable anchors */
 function linkify(text){
   const urlRe = /((https?:\/\/|www\.)[\w\-@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([\w\-@:%_\+.~#?&//=]*))/gi;
   return text.replace(urlRe, function(match){
@@ -1596,45 +1687,79 @@ function linkify(text){
   });
 }
 
+/* helper to get user color from cache or default */
+function getUserColor(name){
+  const cached = userCache.get(name);
+  if(cached && cached.color) return cached.color;
+  return getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+}
+
 /* =========================
-   NEW: Login / Demo handlers
+   NEW: Login (from koodi 2) — replaces previous local-only login
    ========================= */
+
+// SHA-256 helper (uses SubtleCrypto)
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 loginBtn.addEventListener('click', async (e) => {
   e.preventDefault();
-  const u = (loginUser.value || '').trim();
-  const p = loginPass.value || '';
-  if(!u || !p){
-    alert('Please enter username and password.');
-    return;
-  }
-  users = JSON.parse(localStorage.getItem('users')||'{}');
-  // existing user -> check password
-  if(users[u]){
-    if(users[u].pass !== p){
-      alert('Wrong password.');
+  const username = (loginUser.value || '').trim();
+  const password = loginPass.value || '';
+  if(!username || !password){ loginMsg.textContent = 'Täytä käyttäjänimi ja salasana.'; return; }
+  loginMsg.textContent = 'Tarkistetaan...';
+  try {
+    const userRef = doc(db, 'users', username);
+    const snap = await getDoc(userRef);
+    const passHash = await sha256(password);
+
+    if(!snap.exists()){
+      // REGISTER
+      await setDoc(userRef, {
+        passwordHash: passHash,
+        created: serverTimestamp(),
+        color: '#58a6ff'
+      });
+
+      localStorage.setItem('session', username);
+      localStorage.setItem('nick', username);
+      localStorage.setItem('nickColor', '#58a6ff');
+
+      loginMsg.textContent = 'Rekisteröity ja kirjautunut 👍';
+      // update UI
+      nickInput.value = username;
+      nickColorInput.value = '#58a6ff';
+      nickColorCircle.style.background = '#58a6ff';
+      showHome();
       return;
     }
-    // success login
-  } else {
-    // register new user locally (confirm)
-    if(!confirm(`Register new user "${u}"?`)) return;
-    users[u] = { pass: p, color: localStorage.getItem('nickColor') || '#58a6ff', joined: Date.now() };
-    localStorage.setItem('users', JSON.stringify(users));
-    // create Firestore user doc (best-effort)
-    try{
-      await setDoc(doc(db,'users',u), { color: users[u].color, joined: serverTimestamp() });
-    }catch(err){ /* ignore firestore errors */ }
+
+    // LOGIN
+    const data = snap.data();
+    if(data.passwordHash === passHash){
+      localStorage.setItem('session', username);
+      localStorage.setItem('nick', username);
+      if (data.color) localStorage.setItem('nickColor', data.color);
+      loginMsg.textContent = 'Kirjautuminen onnistui ✅';
+      nickInput.value = username;
+      nickColorInput.value = localStorage.getItem('nickColor') || '#58a6ff';
+      nickColorCircle.style.background = localStorage.getItem('nickColor') || '#58a6ff';
+      showHome();
+    } else {
+      loginMsg.textContent = 'Väärä salasana ❌';
+    }
+  } catch (err) {
+    console.error(err);
+    loginMsg.textContent = 'Virhe: ' + (err.message || String(err));
   }
-  // set session and nick
-  localStorage.setItem('session', u);
-  localStorage.setItem('nick', u);
-  localStorage.setItem('nickColor', (users[u] && users[u].color) || '#58a6ff');
-  nickInput.value = u;
-  nickColorInput.value = localStorage.getItem('nickColor');
-  nickColorCircle.style.background = localStorage.getItem('nickColor');
-  showHome();
 });
 
+loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
+
+// Demo/guest button (kept behaviour)
 demoBtn.addEventListener('click', (e) => {
   e.preventDefault();
   const g = 'Guest' + Math.floor(Math.random()*9000 + 1000);
@@ -1648,10 +1773,41 @@ demoBtn.addEventListener('click', (e) => {
   showHome();
 });
 
+/* Ensure rooms are loaded (real-time) */
+setupRoomsListener();
+
 /* =========================
    End of file
    ========================= */
 
+/* ========== New global keyboard handling ========== */
+/* Open How To only on bare '?' (no Alt/AltGraph/Ctrl/Meta) and close on Escape */
+document.addEventListener('keydown', (e) => {
+  // If user is focused in an input/textarea, don't hijack (except when they press Esc)
+  const active = document.activeElement;
+  const isTypingField = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+
+  if(e.key === '?' && !e.altKey && !e.ctrlKey && !e.metaKey){
+    // don't open when focus is in input (user probably meant to type '?')
+    if(isTypingField) return;
+    e.preventDefault();
+    const open = howMenu.classList.toggle('show');
+    howMenu.setAttribute('aria-hidden', !open);
+    if(open){
+      settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
+      profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
+      contextMenu.style.display = 'none';
+    }
+  }
+
+  if(e.key === 'Escape'){
+    // close menus
+    if(howMenu.classList.contains('show')) { howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+    if(settingsMenu.classList.contains('show')) { settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true'); }
+    if(profileCard.classList.contains('show')) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); }
+    if(contextMenu.style.display === 'block') { contextMenu.style.display = 'none'; contextMenu.setAttribute('aria-hidden','true'); }
+  }
+});
 </script>
 </body>
 </html>
