@@ -1,1 +1,1 @@
-- hat viestit eivät automaattisesti alaspäin.
+- viestit eivät automaattisesti alaspäin.
