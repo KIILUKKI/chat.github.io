@@ -1,3 +1,10 @@
 - viestit eivät mene jostain syystä automaattisesti alaspäin.
-- Lisää parempi login eg. https://github.com/KIILUKKI/test/blob/main/index.html, jossa kirjautuminen ei ole local vaan Firebasen kautta menevä todennus, käyttäen sha-256 salasanan suojausta.
-- 
+
+- Lisää parempi login eg. https://github.com/KIILUKKI/test/blob/main/index.html, jossa kirjautuminen ei ole local vaan Firebasen kautta menevä todennus, käyttäen sha-256 salasanan suojausta. ((Pitäisikö poistaa log in? vai tehdä siitä parempi?))
+
+- /clear tai delete ei toimi. (jos toimii todella hidas)
+
+- Viestin muokkaus tai poisto ei toimi. luulutavasti koska firebase ei salli.
+
+- Kun kirjoittaa koneella alt gr + ? avautuu how to menu. Poista tämä ominaisuus.
+
