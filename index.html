@@ -35,8 +35,9 @@
   pointer-events:auto;
 }
 
-/* HOW / FULL / SETTINGS (buttons inside container) */
-#howBtn, #fullBtn, #settingsBtn{
+/* FULL / SETTINGS (buttons inside container) */
+/* Note: How To button removed per request */
+#fullBtn, #settingsBtn{
   background:transparent;
   border:0;
   color:var(--text);
@@ -52,7 +53,7 @@
   justify-content:center;
   box-shadow: 0 6px 18px rgba(0,0,0,0.15);
 }
-#howBtn:hover, #fullBtn:hover, #settingsBtn:hover{ background:rgba(255,255,255,0.02) }
+#fullBtn:hover, #settingsBtn:hover{ background:rgba(255,255,255,0.02) }
 
 /* Make fullscreen button slightly larger / more prominent */
 #fullBtn{
@@ -62,19 +63,11 @@
   font-weight:600;
 }
 
-/* SETTINGS MENU & HOW MENU anchored under container (aligned to right) */
+/* SETTINGS MENU anchored under container (aligned to right) */
 .settings-menu{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:8px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:119}
 .settings-menu.show{display:block}
 .settings-menu button{display:block;width:100%;padding:8px 12px;background:transparent;border:0;color:var(--text);text-align:left;border-radius:8px;cursor:pointer}
 .settings-menu button:hover{background:rgba(255,255,255,0.03)}
-
-.how-menu{position:fixed;top:56px;right:12px;width:360px;max-height:60vh;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none;z-index:121;overflow:auto}
-.how-menu.show{display:block}
-.how-menu h3{margin:0 0 8px 0;font-size:15px}
-.how-menu .section{margin-bottom:10px;font-size:13px;color:var(--muted)}
-.how-menu .section b{color:var(--text)}
-.how-menu .close-how{display:block;margin-top:8px;padding:8px;border-radius:8px;background:transparent;border:0;color:var(--text);cursor:pointer;text-align:right}
-.how-menu .close-how:hover{background:rgba(255,255,255,0.02)}
 
 /* PROFILE CARD */
 .profile-card{position:fixed;top:56px;right:12px;background:var(--panel);border:1px solid #0d1117;padding:12px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.6);display:none;z-index:118;width:220px}
@@ -303,7 +296,7 @@ width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;bo
 .more-btn{position:absolute;right:12px;top:8px;font-size:16px;color:var(--muted);cursor:pointer;opacity:0;padding:4px;border-radius:6px;z-index:12;transform:none}
 .msg:hover .more-btn{opacity:1}
 
-/* mobile specifics */
+/* mobile specifics - left in CSS but behavior is disabled via JS (desktop-only) */
 .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:40;display:none;transition:background var(--drawer-duration) var(--drawer-ease)}
 .mobile-overlay.show{display:block;background:rgba(0,0,0,0.45)}
 .mobile-lobby-drawer{position:fixed;left:0;top:0;height:100%;width:80%;max-width:340px;background:var(--panel);z-index:50;padding:12px;transform:translateX(-110%);transition:transform var(--drawer-duration) var(--drawer-ease),opacity calc(var(--drawer-duration) * 0.9) var(--drawer-ease);opacity:0;will-change:transform}
@@ -334,8 +327,7 @@ width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;bo
 
   <!-- TOP-RIGHT CONTROLS CONTAINER -->
   <div id="topRightControls" aria-hidden="false">
-    <!-- HOW TO button -->
-    <button id="howBtn" title="How To">How To</button>
+    <!-- HOW TO button removed -->
     <!-- FULLSCREEN button -->
     <button id="fullBtn" title="Toggle fullscreen" aria-label="Fullscreen">⤢</button>
     <!-- SETTINGS GEAR -->
@@ -347,55 +339,7 @@ width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;bo
     <button id="settingsDelete">Delete user</button>
   </div>
 
-  <!-- HOW TO PANEL -->
-  <div id="howMenu" class="how-menu" aria-hidden="true">
-    <h3>How to use — Features & Tips</h3>
-    <div class="section"><b>Getting started</b><br>
-      • Create or join a room using the "Create / Join Room" button.<br>
-      • Pick a nickname and color. Guests are auto-assigned a grey color.</div>
-
-    <div class="section"><b>Rooms</b><br>
-      • Rooms list is on the left (desktop) or in the drawer (mobile).<br>
-      • Use the lobby size control to change left panel width.</div>
-
-    <div class="section"><b>Sending messages</b><br>
-      • Type a message and press Enter to send.<br>
-      • Use the emoji picker (button next to input) to insert emojis.</div>
-
-    <div class="section"><b>Replying</b><br>
-      • Desktop: Hover a message and click "reply" to reply to it.<br>
-      • Mobile: Swipe a message to the right (short swipe reveals reply preview) to start a reply; or tap the reply button.</div>
-
-    <div class="section"><b>Edit & Delete</b><br>
-      • Desktop: Your messages have a three-dot "more" button at the far right — open it for Edit and Delete.<br>
-      • Mobile: Long-press your message to open the Edit/Delete menu.</div>
-
-    <div class="section"><b>Typing & Seen receipts</b><br>
-      • Typing indicator shows who is currently typing in the room.<br>
-      • Hover a message (desktop) to see a tooltip with users who have seen it.</div>
-
-    <div class="section"><b>Keyboard shortcuts (desktop)</b><br>
-      • R → Reply to selected message<br>
-      • Esc → Close menus<br>
-      • Ctrl/Cmd + Enter → Send message<br>
-      • ↑ → Edit your last message (when input is empty)<br>
-      • ? → Open “How To”</div>
-
-    <div class="section"><b>Mobile specifics</b><br>
-      • Drawer: swipe from the left edge or use the blue button to open the room drawer.<br>
-      • On-screen keyboard: input and reply box move to stay visible; the chat will auto-scroll when appropriate.<br>
-      • Swipe-to-reply now moves the *entire message element* so the reply gesture feels direct and intuitive.</div>
-
-    <div class="section"><b>Desktop specifics</b><br>
-      • Lobby and chat sidebar remain visible; three-dot menus are available for edits.<br>
-      • Hover interactions show profile and seen receipts.</div>
-
-    <div class="section"><b>Account notes</b><br>
-      • Login/Register stores credentials locally (for demo). Guests are labeled "Guest####".<br>
-      • Settings gear lets you logout or delete your account (local storage + optional cloud doc removal).</div>
-
-    <button id="closeHow" class="close-how">Close</button>
-  </div>
+  <!-- HOW TO PANEL removed per request -->
 
   <!-- PROFILE CARD (also used when hovering/clicking a user) -->
   <div id="profileCard" class="profile-card" aria-hidden="true">
@@ -487,18 +431,12 @@ width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;bo
 
   </div>
 
-  <!-- Mobile overlay and drawer -->
-  <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true"></div>
-  <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-weight:700">Rooms</div>
-      <button id="closeDrawer" class="iconbtn">✕</button>
-    </div>
-    <div id="roomListMobile"></div>
-  </div>
+  <!-- Mobile overlay and drawer (kept in DOM but mobile mode will be disabled by JS) -->
+  <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true" style="display:none;"></div>
+  <div id="mobileDrawer" class="mobile-lobby-drawer" aria-hidden="true" style="display:none;"></div>
 
-  <!-- Blue three-line button (mobile) -->
-  <button id="openLobbyBtn" title="Open lobby">☰</button>
+  <!-- Blue three-line button (mobile) - hidden for desktop-only -->
+  <button id="openLobbyBtn" title="Open lobby" style="display:none;">☰</button>
 
   <!-- Floating scroll to bottom button (now centered) -->
   <button id="scrollBottomBtn" title="Scroll to bottom">↓</button>
@@ -514,8 +452,8 @@ width:var(--lobby-width);min-width:120px;background:var(--panel);padding:12px;bo
 <script type="module">
 /* ===================
    Minimal, targeted changes applied for:
-   - mobile swipe behavior and fixed reply box,
-   - stylish typing indicator with controlled animation restart logic
+   - How To removed from DOM & guarded in JS
+   - Mobile mode disabled (desktop-only): isMobile = false
    Everything else left intact.
    =================== */
 
@@ -535,8 +473,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* DOM refs */
-const howBtn = document.getElementById('howBtn');
-const howMenu = document.getElementById('howMenu');
+const howBtn = document.getElementById('howBtn'); // will be null (How To removed)
+const howMenu = document.getElementById('howMenu'); // will be null (How To removed)
 const fullBtn = document.getElementById('fullBtn');
 
 const login = document.getElementById('login');
@@ -598,6 +536,7 @@ let users = JSON.parse(localStorage.getItem('users')||'{}');
 let nick = '';
 let nickColor = localStorage.getItem('nickColor')||'#58a6ff';
 let room = '';
+
 let replyTo = null;
 let lastMessageTime = 0;
 let typingTimeout = null;
@@ -609,8 +548,9 @@ let roomsUnsub = null; // <--- listener for rooms collection
 const userCache = new Map();
 
 /* Device detection */
+/* MOBILE DISABLED: force desktop-only. This preserves desktop UI and avoids running mobile code. */
 const isTouch = matchMedia('(pointer:coarse)').matches;
-const isMobile = /Mobi|Android|iPhone|iPad|Windows Phone/.test(navigator.userAgent) || isTouch;
+const isMobile = false; // <-- forced desktop-only
 
 /* UI init */
 nickColorInput.value = nickColor;
@@ -631,36 +571,8 @@ function enforceDesktopLobby(){
 }
 enforceDesktopLobby();
 
-/* === NEW: Global edge-swipe handlers to open sidebar from left edge (works in any view) ===
-   - activates only on mobile
-   - only when touch starts near the very left edge (threshold 24px)
-   - triggers openMobileDrawer() once user swipes right > 60px
-*/
-let edgeSwipeStartX = 0;
-let edgeSwipeActive = false;
-
-document.addEventListener('touchstart', (e) => {
-  if(!isMobile) return;
-  const t = e.touches[0];
-  edgeSwipeStartX = t.clientX;
-  // activate only when starting very near left edge and drawer not already open
-  edgeSwipeActive = (edgeSwipeStartX < 24) && !mobileDrawer.classList.contains('show') && !mobileOverlay.classList.contains('show');
-}, { passive: true });
-
-document.addEventListener('touchmove', (e) => {
-  if(!edgeSwipeActive) return;
-  const t = e.touches[0];
-  const deltaX = t.clientX - edgeSwipeStartX;
-  if(deltaX > 60){
-    // open drawer and disable this edge-swipe until next touchstart
-    openMobileDrawer();
-    edgeSwipeActive = false;
-  }
-}, { passive: true });
-
-document.addEventListener('touchend', () => {
-  edgeSwipeActive = false;
-});
+/* === EDGE-SWIPE handlers removed from active path by isMobile = false: they stay defined but won't trigger on desktop */
+/* (original code left intact but inactive when isMobile is false) */
 
 /* Session helpers */
 function showHome(){
@@ -722,23 +634,28 @@ function updateNickEditable(){
   }
 }
 
-/* HOW TO toggle handlers */
-howBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const open = howMenu.classList.toggle('show');
-  howMenu.setAttribute('aria-hidden', !open);
-  // hide settings/profile/context when opening
-  if(open){
-    settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
-    profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
-    contextMenu.style.display = 'none';
+/* HOW TO toggle handlers — guarded because How To removed from DOM */
+if(howBtn && howMenu){
+  howBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = howMenu.classList.toggle('show');
+    howMenu.setAttribute('aria-hidden', !open);
+    // hide settings/profile/context when opening
+    if(open){
+      settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
+      profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
+      contextMenu.style.display = 'none';
+    }
+  });
+  const closeHowBtn = document.getElementById('closeHow');
+  if(closeHowBtn){
+    closeHowBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      howMenu.classList.remove('show');
+      howMenu.setAttribute('aria-hidden','true');
+    });
   }
-});
-document.getElementById('closeHow').addEventListener('click', (e) => {
-  e.stopPropagation();
-  howMenu.classList.remove('show');
-  howMenu.setAttribute('aria-hidden','true');
-});
+}
 
 /* Fullscreen toggle */
 async function toggleFullScreen(){
@@ -752,20 +669,22 @@ async function toggleFullScreen(){
     }
   }catch(e){}
 }
-fullBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullScreen(); });
+if(fullBtn) fullBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFullScreen(); });
 
 /* SETTINGS menu (gear) */
-settingsBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const open = settingsMenu.classList.toggle('show');
-  settingsMenu.setAttribute('aria-hidden', !open);
-  profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
-  // hide how menu if open
-  howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true');
-});
-settingsMenu.addEventListener('click', (e) => e.stopPropagation());
+if(settingsBtn){
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = settingsMenu.classList.toggle('show');
+    settingsMenu.setAttribute('aria-hidden', !open);
+    profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
+    // hide how menu if open
+    if(howMenu){ howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+  });
+}
+if(settingsMenu) settingsMenu.addEventListener('click', (e) => e.stopPropagation());
 document.addEventListener('click', () => {
-  if(settingsMenu.classList.contains('show')){
+  if(settingsMenu && settingsMenu.classList.contains('show')){
     settingsMenu.classList.remove('show');
     settingsMenu.setAttribute('aria-hidden','true');
   }
@@ -775,20 +694,20 @@ document.addEventListener('click', () => {
   }
   // hide context menu too
   if(contextMenu.style.display === 'block') contextMenu.style.display = 'none';
-  // hide How To panel
-  if(howMenu.classList.contains('show')){ howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+  // hide How To panel if present
+  if(howMenu && howMenu.classList.contains('show')){ howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
 });
 
 /* Logout via settings */
-settingsLogout.addEventListener('click', () => {
-  settingsMenu.classList.remove('show');
+if(settingsLogout) settingsLogout.addEventListener('click', () => {
+  if(settingsMenu) settingsMenu.classList.remove('show');
   localStorage.removeItem('session');
   showLogin();
 });
 
 /* Delete user via settings */
-settingsDelete.addEventListener('click', async () => {
-  settingsMenu.classList.remove('show');
+if(settingsDelete) settingsDelete.addEventListener('click', async () => {
+  if(settingsMenu) settingsMenu.classList.remove('show');
   const session = localStorage.getItem('session');
   if(!session){ alert('No logged-in user'); return; }
   if(session.startsWith('Guest')){ alert('Guest account cannot be deleted.'); return; }
@@ -853,9 +772,9 @@ function renderRoomEntry(id){
     d.onclick = ()=> joinRoom(id);
     container.appendChild(d);
   };
-  createEl(roomList);
-  createEl(roomListSidebar);
-  createEl(roomListMobile);
+  if(roomList) createEl(roomList);
+  if(roomListSidebar) createEl(roomListSidebar);
+  if(roomListMobile) createEl(roomListMobile);
 }
 
 /* NEW: real-time rooms listener so rooms appear immediately */
@@ -864,9 +783,9 @@ function setupRoomsListener(){
   try{
     const roomsCol = collection(db,'rooms');
     roomsUnsub = onSnapshot(roomsCol, snap => {
-      roomList.innerHTML = '';
-      roomListSidebar.innerHTML = '';
-      roomListMobile.innerHTML = '';
+      if(roomList) roomList.innerHTML = '';
+      if(roomListSidebar) roomListSidebar.innerHTML = '';
+      if(roomListMobile) roomListMobile.innerHTML = '';
       snap.forEach(docSnap => {
         renderRoomEntry(docSnap.id);
       });
@@ -882,14 +801,16 @@ function setupRoomsListener(){
 }
 
 /* create/join handlers */
-createRoomBtn.onclick = async ()=> {
-  const r = prompt('Room name'); if(!r) return;
-  const p = prompt('Password (optional)');
-  const ref = doc(db,'rooms',r);
-  const snap = await getDoc(ref);
-  if(!snap.exists()) await setDoc(ref,{password:p||'',created:serverTimestamp()});
-  joinRoom(r);
-};
+if(createRoomBtn){
+  createRoomBtn.onclick = async ()=> {
+    const r = prompt('Room name'); if(!r) return;
+    const p = prompt('Password (optional)');
+    const ref = doc(db,'rooms',r);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) await setDoc(ref,{password:p||'',created:serverTimestamp()});
+    joinRoom(r);
+  };
+}
 
 /* joinRoom handles mobile drawer smooth close when applicable, then calls enterRoom */
 async function joinRoom(r){
@@ -912,13 +833,13 @@ async function joinRoom(r){
 
   // If mobile & drawer open -> animate drawer close smoothly, THEN enter room
   const durationMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--drawer-duration')) || 200;
-  const drawerOpen = mobileDrawer.classList.contains('show');
+  const drawerOpen = mobileDrawer && mobileDrawer.classList.contains('show');
   if(isMobile && drawerOpen){
     mobileDrawer.classList.remove('show');
     mobileOverlay.classList.remove('show');
     setTimeout(()=> {
-      mobileOverlay.style.display = 'none';
-      mobileDrawer.style.display = 'none';
+      if(mobileOverlay) mobileOverlay.style.display = 'none';
+      if(mobileDrawer) mobileDrawer.style.display = 'none';
       enterRoom(r);
       updateOpenLobbyBtnVisibility();
     }, durationMs + 20);
@@ -1169,6 +1090,7 @@ function makeMessageElement(id, m){
   el.addEventListener('mouseleave', ()=>{ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); });
 
   // attach mobile interactions including swipe-to-reply and long-press edit/delete
+  // Since isMobile === false, attachMobileInteractions will not add mobile-only behavior that affects desktop.
   attachMobileInteractions(el, id, m);
 
   // reply button click handler (desktop only)
@@ -1282,8 +1204,10 @@ function hideContextMenu(){
    CHANGE: Move the ENTIRE .message element on mobile swipe (so the whole message translates).
    Long-press still opens Edit/Delete for own messages.
    Guard 'replyPreviewShownFor' prevents multiple reply previews showing per-swipe.
+   Since isMobile is forced false, these interactions will not affect desktop.
 */
 function attachMobileInteractions(el, msgId, messageData){
+  if(!el) return;
   let longPressTimer = null;
   let touchStartX = 0;
   let touchStartY = 0;
@@ -1373,17 +1297,19 @@ function attachMobileInteractions(el, msgId, messageData){
 }
 
 /* typing indicator management (client writes typing docs elsewhere) */
-msg.addEventListener('input', ()=> {
-  if(!room || !nick) return;
-  if(msg.value.trim()===''){
-    deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
-    return;
-  }
-  setDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick),{t:serverTimestamp()});
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(()=> { deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); }, 1500);
-});
-msg.addEventListener('blur', ()=> { if(room && (localStorage.getItem('nick')||nick)) deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); });
+if(msg){
+  msg.addEventListener('input', ()=> {
+    if(!room || !nick) return;
+    if(msg.value.trim()===''){
+      deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
+      return;
+    }
+    setDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick),{t:serverTimestamp()});
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(()=> { deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); }, 1500);
+  });
+  msg.addEventListener('blur', ()=> { if(room && (localStorage.getItem('nick')||nick)) deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{}); });
+}
 
 /* reply UI */
 chat.addEventListener('click', (e)=>{
@@ -1397,30 +1323,32 @@ chat.addEventListener('click', (e)=>{
 function cancelReply(){ replyTo = null; replyBox.style.display = 'none'; }
 
 /* send messages */
-msg.addEventListener('keydown', async (e)=>{
-  if(e.key !== 'Enter') return;
-  const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
-  if(!room){ alert('You are not in a room'); return; }
-  deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
+if(msg){
+  msg.addEventListener('keydown', async (e)=>{
+    if(e.key !== 'Enter') return;
+    const textRaw = msg.value.trim(); msg.value = ''; if(!textRaw) return;
+    if(!room){ alert('You are not in a room'); return; }
+    deleteDoc(doc(db,'rooms',room,'typing',localStorage.getItem('nick')||nick)).catch(()=>{});
 
-  // Commands handling
-  if(textRaw.startsWith('/')){
-    await handleCommand(textRaw);
-    return;
-  }
+    // Commands handling
+    if(textRaw.startsWith('/')){
+      await handleCommand(textRaw);
+      return;
+    }
 
-  // compute color deterministically
-  const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) ? (localStorage.getItem('nickColor') || '#58a6ff') : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
+    // compute color deterministically
+    const colorToSend = (localStorage.getItem('session') && !localStorage.getItem('session').startsWith('Guest')) ? (localStorage.getItem('nickColor') || '#58a6ff') : getComputedStyle(document.documentElement).getPropertyValue('--guest-gray').trim();
 
-  await addDoc(collection(db,'rooms',room,'messages'), {
-    name: localStorage.getItem('nick') || nick,
-    text: textRaw,
-    reply: replyTo,
-    color: colorToSend,
-    time: serverTimestamp()
-  }).catch(console.error);
-  replyTo = null; replyBox.style.display = 'none';
-});
+    await addDoc(collection(db,'rooms',room,'messages'), {
+      name: localStorage.getItem('nick') || nick,
+      text: textRaw,
+      reply: replyTo,
+      color: colorToSend,
+      time: serverTimestamp()
+    }).catch(console.error);
+    replyTo = null; replyBox.style.display = 'none';
+  });
+}
 
 /* Helper: robust autoscroll (used after updates) */
 function scrollChatToBottom(force = false){
@@ -1565,14 +1493,16 @@ buildEmojiPicker();
 emojiBtn.onclick = ()=> emojiPicker.style.display = emojiPicker.style.display === 'flex' ? 'none' : 'flex';
 
 /* back button */
-back.onclick = ()=>{
-  if(messagesUnsub) messagesUnsub();
-  if(typingUnsub) typingUnsub();
-  showHome();
-  room = '';
-  chat.innerHTML = '';
-  typingIndicator.textContent = '';
-};
+if(back){
+  back.onclick = ()=>{
+    if(messagesUnsub) messagesUnsub();
+    if(typingUnsub) typingUnsub();
+    showHome();
+    room = '';
+    chat.innerHTML = '';
+    typingIndicator.textContent = '';
+  };
+}
 
 /* lobby size (kept) */
 const LOBBY_SIZES = [
@@ -1583,7 +1513,7 @@ const LOBBY_SIZES = [
 let lobbySizeIndex = parseInt(localStorage.getItem('lobbySizeIndex')||'1',10);
 applyLobbySize();
 
-lobbySizeBtn.addEventListener('click', ()=> {
+if(lobbySizeBtn) lobbySizeBtn.addEventListener('click', ()=> {
   lobbySizeIndex = (lobbySizeIndex + 1) % LOBBY_SIZES.length;
   applyLobbySize();
   localStorage.setItem('lobbySizeIndex', lobbySizeIndex);
@@ -1591,7 +1521,7 @@ lobbySizeBtn.addEventListener('click', ()=> {
 function applyLobbySize(){
   const s = LOBBY_SIZES[lobbySizeIndex];
   document.documentElement.style.setProperty('--lobby-width', s.width);
-  lobbySizeBtn.textContent = s.name[0].toUpperCase();
+  if(lobbySizeBtn) lobbySizeBtn.textContent = s.name[0].toUpperCase();
   if(isMobile) {
     const collapse = (s.name === 'small');
     lobby.classList.toggle('collapsed', collapse);
@@ -1602,8 +1532,9 @@ function applyLobbySize(){
   }
 }
 
-/* Mobile drawer open/close smooth functions */
+/* Mobile drawer functions remain but won't be triggered because isMobile=false */
 function openMobileDrawer(){
+  if(!mobileOverlay || !mobileDrawer) return;
   mobileOverlay.classList.add('show');
   mobileDrawer.classList.add('show');
   mobileOverlay.style.display = 'block';
@@ -1612,6 +1543,7 @@ function openMobileDrawer(){
   updateOpenLobbyBtnVisibility();
 }
 function closeMobileDrawer(){
+  if(!mobileOverlay || !mobileDrawer) return;
   mobileDrawer.classList.remove('show');
   mobileOverlay.classList.remove('show');
   const durationMs = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--drawer-duration')) || 200;
@@ -1627,13 +1559,14 @@ function closeMobileDrawer(){
 
 /* Visibility logic for blue button (mobile) */
 function updateOpenLobbyBtnVisibility(){
-  const drawerOpen = mobileDrawer.classList.contains('show') || mobileOverlay.classList.contains('show');
+  const drawerOpen = mobileDrawer && mobileDrawer.classList.contains('show') || (mobileOverlay && mobileOverlay.classList.contains('show'));
   if(!isMobile){
-    openLobbyBtn.style.display = 'none'; return;
+    if(openLobbyBtn) openLobbyBtn.style.display = 'none';
+    return;
   }
   const isHomeVisible = home.style.display !== 'none';
-  if(isHomeVisible && !drawerOpen) openLobbyBtn.style.display = 'block';
-  else openLobbyBtn.style.display = 'none';
+  if(isHomeVisible && !drawerOpen && openLobbyBtn) openLobbyBtn.style.display = 'block';
+  else if(openLobbyBtn) openLobbyBtn.style.display = 'none';
 }
 const origShowHome = showHome;
 showHome = function(){ origShowHome(); updateOpenLobbyBtnVisibility(); };
@@ -1642,7 +1575,7 @@ showMain = function(){ origShowMain(); updateOpenLobbyBtnVisibility(); };
 const origShowLogin = showLogin;
 showLogin = function(){ origShowLogin(); updateOpenLobbyBtnVisibility(); };
 
-/* Fast drag + velocity-based flick (kept from previous, used for edge-drag drawer) */
+/* Fast drag + velocity-based flick (kept but inactive on desktop) */
 let dragging = false;
 let startX = 0;
 let lastX = 0;
@@ -1652,87 +1585,6 @@ let drawerWidth = 0;
 const EDGE_ZONE = 36;
 const SHORT_THRESHOLD = 30;
 const VELOCITY_THRESHOLD = 0.35;
-
-/* touchstart/drag logic for drawer (unchanged) */
-let touchStarted = false;
-let touchStartX = 0;
-let touchStartY = 0;
-let touchPotentialDrag = false;
-
-function beginDrag(x, initiallyOpen){
-  dragging = true;
-  startX = x;
-  lastX = x;
-  lastT = performance.now();
-  drawerWidth = mobileDrawer.getBoundingClientRect().width || (window.innerWidth * 0.8);
-  mobileDrawer.style.transition = 'none';
-  mobileOverlay.style.transition = 'none';
-  if(!mobileOverlay.classList.contains('show')) mobileOverlay.style.display = 'block';
-  if(!mobileDrawer.classList.contains('show')) mobileDrawer.style.display = 'block';
-  mobileDrawer.classList.remove('show');
-}
-function dragMove(x){
-  if(!dragging) return;
-  const dx = x - startX;
-  const wasOpen = mobileDrawer.classList.contains('show');
-  let translate;
-  if(wasOpen) translate = Math.min(0, dx);
-  else translate = Math.max(-drawerWidth, -drawerWidth + dx);
-  if(translate > 0) translate = 0;
-  if(translate < -drawerWidth) translate = -drawerWidth;
-  mobileDrawer.style.transform = `translateX(${translate}px)`;
-  const openness = 1 - (Math.abs(translate) / drawerWidth);
-  mobileOverlay.style.background = `rgba(0,0,0,${0.45 * openness})`;
-  mobileOverlay.style.display = 'block';
-  const now = performance.now();
-  const dt = now - lastT || 16;
-  vx = (x - lastX) / dt;
-  lastX = x;
-  lastT = now;
-}
-function endDrag(){
-  if(!dragging) return;
-  dragging = false;
-  const style = window.getComputedStyle(mobileDrawer);
-  let translateX = 0;
-  const matrix = style.transform;
-  if(matrix && matrix !== 'none'){
-    try{
-      const m = mobileDrawer.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
-      translateX = m ? parseFloat(m[1]) : 0;
-    }catch(e){ translateX = 0; }
-  } else {
-    const m = mobileDrawer.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
-    translateX = m ? parseFloat(m[1]) : 0;
-  }
-  const wasOpen = mobileDrawer.classList.contains('show');
-  const openDecision = (() => {
-    if(Math.abs(vx) > VELOCITY_THRESHOLD) return vx > 0;
-    if(wasOpen) return !(Math.abs(translateX) > SHORT_THRESHOLD);
-    else return (Math.abs(translateX) < (drawerWidth - SHORT_THRESHOLD));
-  })();
-  mobileDrawer.style.transition = '';
-  mobileOverlay.style.transition = '';
-  if(openDecision){
-    mobileDrawer.style.transform = '';
-    mobileDrawer.classList.add('show');
-    mobileOverlay.classList.add('show');
-    updateOpenLobbyBtnVisibility();
-  } else {
-    mobileDrawer.style.transform = `translateX(-${drawerWidth}px)`;
-    mobileDrawer.classList.remove('show');
-    mobileOverlay.classList.remove('show');
-    setTimeout(()=>{
-      if(!mobileDrawer.classList.contains('show')){
-        mobileOverlay.style.display = 'none';
-        mobileDrawer.style.display = 'none';
-        updateOpenLobbyBtnVisibility();
-      }
-    }, 220);
-  }
-  vx = 0;
-  mobileDrawer.style.willChange = '';
-}
 
 /* utility helpers */
 function escapeHtml(s){
@@ -1768,57 +1620,59 @@ async function sha256(text) {
   return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-loginBtn.addEventListener('click', async (e) => {
-  e.preventDefault();
-  const username = (loginUser.value || '').trim();
-  const password = loginPass.value || '';
-  if(!username || !password){ loginMsg.textContent = 'Täytä käyttäjänimi ja salasana.'; return; }
-  loginMsg.textContent = 'Tarkistetaan...';
-  try {
-    const userRef = doc(db, 'users', username);
-    const snap = await getDoc(userRef);
-    const passHash = await sha256(password);
+if(loginBtn){
+  loginBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const username = (loginUser.value || '').trim();
+    const password = loginPass.value || '';
+    if(!username || !password){ loginMsg.textContent = 'Täytä käyttäjänimi ja salasana.'; return; }
+    loginMsg.textContent = 'Tarkistetaan...';
+    try {
+      const userRef = doc(db, 'users', username);
+      const snap = await getDoc(userRef);
+      const passHash = await sha256(password);
 
-    if(!snap.exists()){
-      // REGISTER
-      await setDoc(userRef, {
-        passwordHash: passHash,
-        created: serverTimestamp(),
-        color: '#58a6ff'
-      });
+      if(!snap.exists()){
+        // REGISTER
+        await setDoc(userRef, {
+          passwordHash: passHash,
+          created: serverTimestamp(),
+          color: '#58a6ff'
+        });
 
-      localStorage.setItem('session', username);
-      localStorage.setItem('nick', username);
-      localStorage.setItem('nickColor', '#58a6ff');
+        localStorage.setItem('session', username);
+        localStorage.setItem('nick', username);
+        localStorage.setItem('nickColor', '#58a6ff');
 
-      loginMsg.textContent = 'Rekisteröity ja kirjautunut 👍';
-      // update UI
-      nickInput.value = username;
-      nickColorInput.value = '#58a6ff';
-      nickColorCircle.style.background = '#58a6ff';
-      showHome();
-      return;
+        loginMsg.textContent = 'Rekisteröity ja kirjautunut 👍';
+        // update UI
+        nickInput.value = username;
+        nickColorInput.value = '#58a6ff';
+        nickColorCircle.style.background = '#58a6ff';
+        showHome();
+        return;
+      }
+
+      // LOGIN
+      const data = snap.data();
+      if(data.passwordHash === passHash){
+        localStorage.setItem('session', username);
+        localStorage.setItem('nick', username);
+        if (data.color) localStorage.setItem('nickColor', data.color);
+        loginMsg.textContent = 'Kirjautuminen onnistui ✅';
+        nickInput.value = username;
+        nickColorInput.value = localStorage.getItem('nickColor') || '#58a6ff';
+        nickColorCircle.style.background = localStorage.getItem('nickColor') || '#58a6ff';
+        showHome();
+      } else {
+        loginMsg.textContent = 'Väärä salasana ❌';
+      }
+    } catch (err) {
+      console.error(err);
+      loginMsg.textContent = 'Virhe: ' + (err.message || String(err));
     }
-
-    // LOGIN
-    const data = snap.data();
-    if(data.passwordHash === passHash){
-      localStorage.setItem('session', username);
-      localStorage.setItem('nick', username);
-      if (data.color) localStorage.setItem('nickColor', data.color);
-      loginMsg.textContent = 'Kirjautuminen onnistui ✅';
-      nickInput.value = username;
-      nickColorInput.value = localStorage.getItem('nickColor') || '#58a6ff';
-      nickColorCircle.style.background = localStorage.getItem('nickColor') || '#58a6ff';
-      showHome();
-    } else {
-      loginMsg.textContent = 'Väärä salasana ❌';
-    }
-  } catch (err) {
-    console.error(err);
-    loginMsg.textContent = 'Virhe: ' + (err.message || String(err));
-  }
-});
+  });
+}
 
 loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') loginBtn.click(); });
 
@@ -1844,7 +1698,9 @@ setupRoomsListener();
    ========================= */
 
 /* ========== New global keyboard handling ========== */
-/* Open How To only on bare '?' (no Alt/AltGraph/Ctrl/Meta) and close on Escape */
+/* Open How To only on bare '?' (no Alt/AltGraph/Ctrl/Meta) and close on Escape
+   Guarded: only attempt How To toggle if howMenu exists (we removed it).
+*/
 document.addEventListener('keydown', (e) => {
   // If user is focused in an input/textarea, don't hijack (except when they press Esc)
   const active = document.activeElement;
@@ -1854,19 +1710,21 @@ document.addEventListener('keydown', (e) => {
     // don't open when focus is in input (user probably meant to type '?')
     if(isTypingField) return;
     e.preventDefault();
-    const open = howMenu.classList.toggle('show');
-    howMenu.setAttribute('aria-hidden', !open);
-    if(open){
-      settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true');
-      profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
-      contextMenu.style.display = 'none';
+    if(howMenu){
+      const open = howMenu.classList.toggle('show');
+      howMenu.setAttribute('aria-hidden', !open);
+      if(open){
+        if(settingsMenu){ settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true'); }
+        profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true');
+        contextMenu.style.display = 'none';
+      }
     }
   }
 
   if(e.key === 'Escape'){
     // close menus
-    if(howMenu.classList.contains('show')) { howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
-    if(settingsMenu.classList.contains('show')) { settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true'); }
+    if(howMenu && howMenu.classList.contains('show')) { howMenu.classList.remove('show'); howMenu.setAttribute('aria-hidden','true'); }
+    if(settingsMenu && settingsMenu.classList.contains('show')) { settingsMenu.classList.remove('show'); settingsMenu.setAttribute('aria-hidden','true'); }
     if(profileCard.classList.contains('show')) { profileCard.classList.remove('show'); profileCard.setAttribute('aria-hidden','true'); }
     if(contextMenu.style.display === 'block') { contextMenu.style.display = 'none'; contextMenu.setAttribute('aria-hidden','true'); }
   }
